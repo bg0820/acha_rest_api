@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko-kr">
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width,initial-scale=1">
+	    <!-- JQuery JS -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+		<script src="/static/js/register.js"></script>
+
+		<!-- Main Page CSS -->
+		<link href="/static/css/style.css" rel="stylesheet" type="text/css" />
+		<link href="/static/css/font.css" rel="stylesheet" type="text/css" />
+		<!-- IE 영역 -->
+		<!--[if IE]>
+		<![endif]-->
+
+		<title>아차! : 매장용 회원가입 페이지</title>
+		<script language="javascript">
+			var _roadFullAddr;
+			var _entX;
+			var _entY;
+			var success = -1;
+
+			// 27개 파라미터
+			function jusoCallBack(roadFullAddr,roadAddrPart1,addrDetail,roadAddrPart2,engAddr,jibunAddr,zipNo,admCd,rnMgtSn,bdMgtSn,detBdNmList,bdNm,bdKdcd,siNm,sggNm,emdNm,liNm,rn,udrtYn,buldMnnm,buldSlno,mtYn,lnbrMnnm,lnbrSlno,emdNo,entX,entY){
+				_roadFullAddr = roadFullAddr; // 풀 도로명 주소
+				_roadAddr = roadAddrPart1; // 도로명 주소
+				_detailAddress = addrDetail; // 상세주소
+
+				_entX = entX; // 좌표 x
+				_entY = entY; // 좌표 y
+				success = 1;
+				document.getElementById('addressMsg').innerHTML = roadFullAddr;
+			}
+
+			function goPopup(){
+				// 주소검색을 수행할 팝업 페이지를 호출합니다.
+				// 호출된 페이지(jusopopup.jsp)에서 실제 주소검색URL(http://www.juso.go.kr/addrlink/addrCoordUrl.do)를 호출하게 됩니다.
+				var pop = window.open("/store/registerJuso/","pop","width=570,height=420, scrollbars=yes, resizable=yes");
+			}
+		</script>
+	</head>
+	<body>
+		<div class="center">
+			<div class="container">
+				<img src="/static/img/logo.svg" width="100%">
+				<p class="achaMsg">예약 관리를 통한 매출 증대 서비스, 아차!</p>
+
+				<input type="text" id="id" maxlength="20" placeholder="아이디">
+				<br />
+				<input type="password" id="pw"  maxlength="20" placeholder="비밀번호">
+				<br />
+				<input type="password" id="pwConfirm"  maxlength="20" placeholder="비밀번호 확인">
+				<br />
+				<div id="msg"></div>
+				<input type="text" id="storename" maxlength="50" placeholder="매장 이름">
+				<br />
+				<input type="text" id="storePhoneNumber" maxlength="20" placeholder="매장 전화번호">
+				<br />
+                <input type="text" id="storeCEOPhoneNumber" maxlength="20" placeholder="매장 지점장 전화번호">
+                <br />
+				<input type="text" id="registerKey" maxlength="65" placeholder="registerKey 입력">
+				<br />
+
+				<a href="javascript:goPopup();">
+					<div class="button address">
+						주소 찾기
+					</div>
+				</a>
+				<div id="addressMsg" class="addressMsg"></div>
+
+				<a href="javascript:register();">
+					<div class="button">
+						회원가입
+					</div>
+				</a>
+				<div id="resultMsg"></div>
+			</div>
+		</div>
+	</body>
+</html>

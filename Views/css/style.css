@@ -1,0 +1,83 @@
+a {
+	text-decoration: none;
+}
+
+/* 메인 중앙 정렬 */
+.center
+{
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.container
+{
+	margin: 0 auto;
+	height: 50%;
+	max-width: 80%;
+	background: #fff;
+}
+
+.center img {
+	vertical-align: middle;
+}
+
+.center select {
+	text-align: center;
+	vertical-align: middle;
+	height: 40px;
+	width: 230px;
+	background-color: #fff;
+	font-size: 11pt;
+	color: #616161;
+	margin: auto;
+	margin-bottom: 10px;
+	padding-left: 5px;
+	border: 1px solid #CCCCCC;
+	border-color: #CCCCCC;
+}
+
+.center select:focus {
+	outline: none;
+	border: 1px solid #CCCCCC;
+	border-color: #90CAF9;
+	box-shadow: 0 0 10px #90CAF9;
+}
+
+.center input {
+	text-align: left;
+	vertical-align: middle;
+	height: 35px;
+	width: 225px;
+	background-color: #fff;
+	font-size: 11pt;
+	color: #616161;
+	margin-bottom: 5px;
+	padding-left: 5px;
+	border: 1px solid #CCCCCC;
+	border-color: #CCCCCC;
+	box-shadow: none;
+	border-radius: none;
+}
+
+.center input:focus {
+	outline: none;
+	border: 1px solid #CCCCCC;
+	border-color: #90CAF9;
+	box-shadow: 0 0 10px #90CAF9;
+}
+
+.button {
+	line-height: 50px;
+	vertical-align: middle;
+	text-align: center;
+	margin-top: 10px;
+	margin-bottom: 15px;
+	width: 230px;
+	height: 50px;
+	background-color: #1E88E5;
+	color: #fff;
+}

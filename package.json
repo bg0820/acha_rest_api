@@ -1,0 +1,25 @@
+{
+  "name": "ahcha_rest_api",
+  "version": "1.0.0",
+  "description": "acha_rest_api",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "bg0820",
+  "license": "ISC",
+  "dependencies": {
+    "consolidate": "^0.15.1",
+    "cors": "^2.8.4",
+    "crypto": "^1.0.1",
+    "ejs": "^2.6.1",
+    "express": "^4.16.3",
+    "mongodb": "^3.1.1",
+    "pbkdf2": "^3.0.16"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/npm/express.git"
+  }
+}
