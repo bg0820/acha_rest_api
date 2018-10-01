@@ -23,7 +23,7 @@ exports.register = function(req, res) {
 		return;
 	}
 
-	mapper.user.register(_phoneNumber, _phoneNumberHash, _kakaoUserKey).then(function(result) {
+	mapper.user.userRegister(_phoneNumber, _phoneNumberHash, _kakaoUserKey).then(function(result) {
 		res.send({ result : 'success', code: '0',  msg: ''});
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
@@ -40,24 +40,17 @@ exports.register = function(req, res) {
 	});*/
 };
 
-// TODO : 폰번호로도 확인할수 있게끔
 exports.regCheck = function(req, res) {
 	var _key = req.query.key;
 	var _kakaoUserKey = req.query.kakaoUserKey;
 	var _phoneNumber = req.query.phoneNumber;
-	var _phoneNumberHash;
-	if(_phoneNumber)
-	{
-		_phoneNumber = _phoneNumber.replace(/-/gi, '');
-		_phoneNumberHash = util.saltHash(_phoneNumber);
-	}
 
 	if(!(_key === "33233C0EB2C9CA56566FD7D503F100ABDBE012306B4EB812C3C9E83129E8495D")) {
 		errorProc.errorProcessing(101, res, req);
 		return;
 	}
 
-	mongo.findOne('User', {kakaoUserKey: _kakaoUserKey}).then(function(result) {
+	mapper.user.userRegisterCheck(_phoneNumber, _kakaoUserKey).then(function(result) {
 		if(result) // 카카오 유저키 가입되어있음
 			res.send({ result : 'success', code: '0', msg: '', isReg: true});
 		else
@@ -65,4 +58,13 @@ exports.regCheck = function(req, res) {
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
+	/*
+	mongo.findOne('User', {kakaoUserKey: _kakaoUserKey}).then(function(result) {
+		if(result) // 카카오 유저키 가입되어있음
+			res.send({ result : 'success', code: '0', msg: '', isReg: true});
+		else
+			res.send({ result : 'success', code: '0',  msg: '', isReg: false});
+	}).catch(function(error) {
+		errorProc.errorProcessing(error, res, req);
+	});*/
 };

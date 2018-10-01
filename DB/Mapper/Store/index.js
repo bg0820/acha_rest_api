@@ -51,7 +51,7 @@ module.exports = {
 	storeRegister: function(param) {
 		return new Promise(function(resolve, reject) {
 
-			var selectQuery = 'SELECT EXISTS(SELECT 1 FROM acha.Store WHERE id = ? LIMIT 1) as count;';
+			var selectQuery = 'SELECT EXISTS(SELECT 1 FROM acha.Store WHERE id = ? LIMIT 1) as count';
 			var query = "INSERT INTO Store (UUID, id, pw, storeName, phoneNumber, ceoPhoneNumber, fullAddress, roadAddress, detailAddress, entX, entY, regTime) VALUES (UNHEX(REPLACE(UUID(),'-',\"\")), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);";
 
 			sql.select(selectQuery, [param[0]]).then(function(rows) {
