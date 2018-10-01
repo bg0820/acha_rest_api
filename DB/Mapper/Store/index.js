@@ -133,7 +133,7 @@ module.exports = {
 			Promise.all([sql.insert(statisticsInserQuery, [param[0], param[1], param[0], param[1]]), sql.insert(insertQuery, param)]).then(function() {
 				// 예약 내용 삽입후 예약 토큰으로 UUID 를 가져와서 ReservLeftJoinStore 테이블 가져오기
 				// param[7] = reservToken
-				var selectQuery = 'SELECT ReservLeftJoinStore.*  FROM acha.ReservLeftJoinStore LEFT JOIN acha.Reserv on ReservLeftJoinStore.reservUUID = HEX(Reserv.UUID) WHERE Reserv.reservToken = ?';
+				var selectQuery = 'SELECT * FROM ReservLeftJoinStore WHERE reservToken = ?';
 				return sql.select(selectQuery, [param[7]]);
 			}).then(function(result) {
 				resolve(result[0]);
@@ -146,7 +146,7 @@ module.exports = {
 	reservEdit: function(param) {
 		return new Promise(function(resolve, reject) {
 
-			var updateQuery = 'UPDATE Reserv SET reservNumber = COALESCE(?, reservNumber), phoneNumber = COALESCE(?, phoneNumber), reservTime = COALESCE(?, reservTime), reservName = COALESCE(?, reservName), reservTarget = COALESCE(?, reservTarget), reservMemo = COALESCE(?, reservMemo) WHERE UUID = UNHEX(?)';
+			var updateQuery = 'UPDATE Reserv SET reservNumber = COALESCE(?, reservNumber), reservTime = COALESCE(?, reservTime), reservName = COALESCE(?, reservName), reservTarget = COALESCE(?, reservTarget), reservMemo = COALESCE(?, reservMemo) WHERE UUID = UNHEX(?)';
 			sql.update(updateQuery, param).then(function(rows) {
 				resolve(rows);
 			}).catch(function(error) {
@@ -174,7 +174,7 @@ module.exports = {
 
 	reservSearch: function(param) {
 		return new Promise(function(resolve, reject) {
-			var searchQuery = 'SELECT hex(UUID) UUID, phoneNumber, reservName, reservNumber, reservTime, reservMemo, reservStatus, reservTarget, reservToken FROM Reserv WHERE reservName = ? or phoneNumber = ? or (reservTime >= ? and reservTime < ?)';
+			var searchQuery = 'SELECT * FROM ReservLookupTable WHERE reservName = ? or phoneNumber = ? or (reservTime >= ? and reservTime < ?)';
 
 			sql.select(searchQuery, param).then(function(rows) {
 				resolve(rows);
@@ -198,7 +198,7 @@ module.exports = {
 
 	reservInQuery: function(reservUUID, storeUUID) {
 		return new Promise(function(resolve, reject) {
-			var searchQuery = 'SELECT * FROM acha.ReservLookupTable WHERE UUID = ? and storeUUID = ?';
+			var searchQuery = 'SELECT * FROM ReservLookupTable WHERE reservUUID = ? and storeUUID = ?';
 
 			sql.select(searchQuery, [reservUUID, storeUUID]).then(function(rows) {
 				if(rows.length == 0)

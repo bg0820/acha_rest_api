@@ -6,8 +6,8 @@ var mapper = require('../../../DB/mapperController.js');
 var mongo = require('../../../MongoDB');
 var ObjectId = require('mongodb').ObjectID;
 
-exports.reg = function(req, res) {
-	// TODO : 폰번호가 등록안되있으면 폰번호 까지 등록
+exports.register = function(req, res) {
+	// DONE - DONE : 폰번호가 등록안되있으면 폰번호 까지 등록
 	var _key = req.query.key;
 	var _phoneNumber = req.query.phoneNumber;
 	var _phoneNumberHash;
@@ -23,6 +23,12 @@ exports.reg = function(req, res) {
 		return;
 	}
 
+	mapper.user.register(_phoneNumber, _phoneNumberHash, _kakaoUserKey).then(function(result) {
+		res.send({ result : 'success', code: '0',  msg: ''});
+	}).catch(function(error) {
+		errorProc.errorProcessing(error, res, req);
+	});
+	/*
 	var updateFilterQuery = { phoneNumberHash: _phoneNumberHash };
 	var updateQuery = { $set: {phoneNumberHash: _phoneNumberHash, phoneNumber: _phoneNumber, kakaoUserKey: _kakaoUserKey } };
 	var updateOption = { upsert: true };
@@ -31,12 +37,20 @@ exports.reg = function(req, res) {
 		res.send({ result : 'success', code: '0',  msg: ''});
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
-	});
+	});*/
 };
 
+// TODO : 폰번호로도 확인할수 있게끔
 exports.regCheck = function(req, res) {
 	var _key = req.query.key;
 	var _kakaoUserKey = req.query.kakaoUserKey;
+	var _phoneNumber = req.query.phoneNumber;
+	var _phoneNumberHash;
+	if(_phoneNumber)
+	{
+		_phoneNumber = _phoneNumber.replace(/-/gi, '');
+		_phoneNumberHash = util.saltHash(_phoneNumber);
+	}
 
 	if(!(_key === "33233C0EB2C9CA56566FD7D503F100ABDBE012306B4EB812C3C9E83129E8495D")) {
 		errorProc.errorProcessing(101, res, req);

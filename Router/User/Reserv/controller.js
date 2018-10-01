@@ -109,22 +109,29 @@ exports.reservationStatusEdit = function(req, res) {
 	});
 };
 
-exports.reservationMatch = function(req, res) {
+
+// 토큰 주면 -> 상태코드 줌
+exports.getReservStatus = function(req, res) {
 	var _key = req.query.key;
 	var _reservToken = req.query.reservToken;
-	var _reservNumber = req.query.reservNumber;
-	var _kakaoUserKey = req.query.kakaoUserKey;
-	var _phoneNumber = req.query.phoneNumber;
+	var _reservId = req.query.reservId;
 
 	if(!(_key === "33233C0EB2C9CA56566FD7D503F100ABDBE012306B4EB812C3C9E83129E8495D")) {
 		errorProc.errorProcessing(101, res, req);
 		return;
 	}
 
+	// reservToken 또는 reservUUID 를 통해서 예약 상태를 가져옴
+	mapper.user.getReservStatus(_reservId, _reservToken).then(function(result) {
+		res.send({ result : 'success', code: '0', msg: '', statusCode: result.reservStatus,  reservId: result.UUID});
+	}).catch(function(error) {
+		errorProc.errorProcessing(error, res, req);
+	});
+	/*
 	var query = {
-		$and: [
+		$or: [
 			{reservToken: _reservToken},
-			{reservNumber: _reservNumber}
+			{_id: _reservId}
 		]
 	};
 
@@ -141,7 +148,7 @@ exports.reservationMatch = function(req, res) {
 		res.send({ result : 'success', code: '0', msg: '카카오 유저키 등록 완료', statusCode: result[1].currentStatus,  reservId: result[1]._id});
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
-	});
+	});*/
 };
 
 exports.userSetName = function(req, res)
@@ -166,7 +173,7 @@ exports.userSetName = function(req, res)
 		errorProc.errorProcessing(error, res, req);
 	});
 }
-
+/*
 exports.reservIdToCurrentStatus = function(req, res)
 {
 	var _key = req.query.key;
@@ -188,7 +195,7 @@ exports.reservIdToCurrentStatus = function(req, res)
 		errorProc.errorProcessing(error, res, req);
 	});
 }
-
+*/
 exports.preOrder = function(req, res)
 {
 	res.render('pre-order.html');

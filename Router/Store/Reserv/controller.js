@@ -357,7 +357,6 @@ exports.reservationEdit = function(req, res) {
 	mapper.store.tokenCheck(_token).then(function(result) {
 		var updateParam = [
 			req.body.reservNumber,
-			req.body.phoneNumber,
 			new Date(Number(req.body.reservTime)),
 			req.body.reservName,
 			req.body.tableName,
