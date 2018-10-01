@@ -31,6 +31,24 @@ module.exports = {
 		});
 	},
 
+	pushMsg: function(reservUUID) {
+		return new Promise(function(resolve, reject) {
+			// 삽입후 phoneNumberHash 있으면 UPDATE
+			var selectQuery = 'SELECT FcmKey.* FROM acha.FcmKey LEFT JOIN acha.Reserv ON Reserv.storeUUID = FcmKey.storeUUID WHERE Reserv.UUID = UNHEX(?)';
+
+			sql.inset(selectQuery, [reservUUID]).then(function(rows) {
+				var returnArr = [];
+
+				for(var i = 0; i< row.length; i++)
+					returnArr.push(row[i].fcmKey);
+
+				resolve(returnArr);
+			}).catch(function(error) {
+				reject(error);
+			});
+		});
+	},
+
 	getReservStatus: function(reservUUID, reservToken) {
 		return new Promise(function(resolve, reject) {
 			var selectQuery = 'SELECT reservStatus, HEX(UUID) as UUID FROM Reserv WHERE UUID = HEX(?) or reservToken = ?';
