@@ -258,15 +258,19 @@ exports.reservationSearch = function(req, res) {
 		_storeId = _token.split('-')[0];
 	var _startDate = new Date(Number(req.query.startDate)); // timestamp
 	var _endDate = new Date(Number(req.query.endDate)); // timestamp
-	var _phoneNumber = req.query.phoneNumber;
+	var _phoneNumber = req.body.phoneNumber;
+	var _phoneNumberHash;
 	if(_phoneNumber)
+	{
 		_phoneNumber = _phoneNumber.replace(/-/gi, '');
+	    _phoneNumberHash = util.saltHash(_phoneNumber);
+	}
 	var _name = req.query.name;
 	if(_name)
 		_name = _name.trim(); // 이름 공백제거
 
 	mapper.store.tokenCheck(_token).then(function(result) {
-		return mapper.store.reservSearch([_name, _phoneNumber, _startDate, _endDate]);
+		return mapper.store.reservSearch([_name, _phoneNumberHash, _startDate, _endDate]);
 	}).then(function(result) {
 		res.send({ result: 'success', code: '0', msg: '', reservList: result})
 	}).catch(function(error) {
@@ -346,6 +350,13 @@ exports.reservationEdit = function(req, res) {
 	if(_token)
 		_storeId = _token.split('-')[0];
 	var _reservId = req.body.reservId;
+	var _phoneNumber = req.body.phoneNumber;
+	var _phoneNumberHash;
+	if(_phoneNumber)
+	{
+		_phoneNumber = _phoneNumber.replace(/-/gi, '');
+	    _phoneNumberHash = util.saltHash(_phoneNumber);
+	}
 
 	// 값이 모두 있어야함, 이름은 없어도 가능
 	if( !req.body.token || !req.body.reservId )
@@ -357,6 +368,8 @@ exports.reservationEdit = function(req, res) {
 	mapper.store.tokenCheck(_token).then(function(result) {
 		var updateParam = [
 			req.body.reservNumber,
+			_phoneNumber,
+			_phoneNumberHash,
 			new Date(Number(req.body.reservTime)),
 			req.body.reservName,
 			req.body.tableName,

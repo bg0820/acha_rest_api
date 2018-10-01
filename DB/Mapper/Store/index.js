@@ -146,7 +146,7 @@ module.exports = {
 	reservEdit: function(param) {
 		return new Promise(function(resolve, reject) {
 
-			var updateQuery = 'UPDATE Reserv SET reservNumber = COALESCE(?, reservNumber), reservTime = COALESCE(?, reservTime), reservName = COALESCE(?, reservName), reservTarget = COALESCE(?, reservTarget), reservMemo = COALESCE(?, reservMemo) WHERE UUID = UNHEX(?)';
+			var updateQuery = 'UPDATE ReservLookupTable SET reservNumber = COALESCE(?, reservNumber), phoneNumber = COALESCE(?, phoneNumber), phoneNumberHash = COALESCE(?, phoneNumberHash), reservTime = COALESCE(?, reservTime), reservName = COALESCE(?, reservName), reservTarget = COALESCE(?, reservTarget), reservMemo = COALESCE(?, reservMemo) WHERE UUID = UNHEX(?)';
 			sql.update(updateQuery, param).then(function(rows) {
 				resolve(rows);
 			}).catch(function(error) {
@@ -174,7 +174,7 @@ module.exports = {
 
 	reservSearch: function(param) {
 		return new Promise(function(resolve, reject) {
-			var searchQuery = 'SELECT * FROM ReservLookupTable WHERE reservName = ? or phoneNumber = ? or (reservTime >= ? and reservTime < ?)';
+			var searchQuery = 'SELECT * FROM ReservLookupTable WHERE reservName = ? or phoneNumberHash = ? or (reservTime >= ? and reservTime < ?)';
 
 			sql.select(searchQuery, param).then(function(rows) {
 				resolve(rows);
