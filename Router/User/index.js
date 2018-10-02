@@ -5,7 +5,7 @@ const storeController = require('./Store/controller');
 const pushController = require('./Push/controller');
 
 // 사용자 정보
-router.get('/info/reg', infoController.reg);
+router.get('/info/reg', infoController.register);
 router.get('/info/regCheck', infoController.regCheck);
 
 // 예약
