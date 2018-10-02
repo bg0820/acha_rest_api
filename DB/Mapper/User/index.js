@@ -49,15 +49,45 @@ module.exports = {
 		});
 	},
 
+	reservSearch: function(param) {
+		return new Promise(function(resolve, reject) {
+			// reserved 조회한 시간 - 1시간 이후 예약만
+			var selectQuery = 'SELECT * FROM acha.ReservLookupLeftJoinStore WHERE (kakaoUserKey = ? or phoneNumberHash = ?) and reservStatus = ? and reservTime >= ?';
+
+			sql.select(selectQuery, param).then(function(rows) {
+				resolve(rows);
+			}).catch(function(error) {
+				reject(error);
+			});
+		});
+	},
+
 	getReservStatus: function(reservUUID, reservToken) {
 		return new Promise(function(resolve, reject) {
 			var selectQuery = 'SELECT reservStatus, HEX(UUID) as UUID FROM Reserv WHERE UUID = HEX(?) or reservToken = ?';
 
-			sql.selectQuery(selectQuery, [reservUUID, reservToken]).then(function(rows) {
+			sql.select(selectQuery, [reservUUID, reservToken]).then(function(rows) {
 				if(rows.length == 0)  // 예약이 존재하지 않는경우
 					throw 800;
 
 				resolve(rows[0]);
+			}).catch(function(error) {
+				reject(error);
+			});
+		});
+	},
+
+	reservUserSetName: function(reservUUID, name) {
+		return new Promise(function(resolve, reject) {
+			var selectQuery = 'SELECT HEX(userUUID) as userUUID FROM Reserv WHERE UUID = UNHEX(?)';
+
+			sql.select(selectQuery, [reservUUID]).then(function(rows) {
+				if(rows.length == 0)
+					throw 800;
+
+				return sql.update('UPDATE User SET name = ? WHERE UUID = UNHEX(?)', [rows[0].userUUID, name]);
+			}).then(function(result) {
+				resolve(true);
 			}).catch(function(error) {
 				reject(error);
 			});

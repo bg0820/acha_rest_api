@@ -2,6 +2,8 @@ var util = require('../../../Util');
 var log = require('../../../Util/Log');
 var errorProc = require('../../../Util/Error');
 
+var mapper = require('../../../DB/mapperController.js');
+
 var mongo = require('../../../MongoDB');
 var ObjectId = require('mongodb').ObjectID;
 
@@ -29,6 +31,12 @@ exports.reservationSearch = function(req, res) {
 		return;
 	}
 
+	mapper.user.reservSearch([_kakaoUserKey, _phoneNumberHash, 'reserved', new Date(currentTimestamp - 3600000)]).then(function(result) {
+		res.send({ result : 'success', code: '0', msg: '', reservList: result});
+	}).catch(function(error) {
+		errorProc.errorProcessing(error, res, req);
+	});
+/*
 	// 값이 있을경우에만 or 연산
 	var orArray = [];
 
@@ -87,6 +95,7 @@ exports.reservationSearch = function(req, res) {
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
+	*/
 };
 
 // 예약 아이디와, 예약 상태를 주면 예약 상태 수정
@@ -101,12 +110,17 @@ exports.reservationStatusEdit = function(req, res) {
 		errorProc.errorProcessing(101, res, req);
 		return;
 	}
-
-	mongo.updateStatistics(_reservId, _status, 'User', null).then(function(result) {
+	mapper.common.updateStatistics(_reservId, _status, 'User', null).then(function(result) {
 		res.send({ result : 'success', code: '0', msg: ''});
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
+
+	/*mongo.updateStatistics(_reservId, _status, 'User', null).then(function(result) {
+		res.send({ result : 'success', code: '0', msg: ''});
+	}).catch(function(error) {
+		errorProc.errorProcessing(error, res, req);
+	});*/
 };
 
 
@@ -162,6 +176,13 @@ exports.userSetName = function(req, res)
 		return;
 	}
 
+	mapper.user.reservUserSetName(_reservId, _name).then(function() {
+		res.send({result: 'success', code: '0', msg: ''});
+	}).catch(function(error) {
+		errorProc.errorProcessing(error, res, req);
+	});
+
+	/*
 	mongo.findOne('Reserv', {_id: ObjectId(_reservId)}, {userId: 1}).then(function(result) {
 		var reservUpdatePromise = mongo.updateOne('Reserv', {_id: ObjectId(_reservId)}, {$set: {name: _name}}, {upsert: false});
 		var userUpdatePromise = mongo.updateOne('User', {_id: ObjectId(result.userId)}, {$set: {name: _name}}, {upsert: false});
@@ -171,7 +192,7 @@ exports.userSetName = function(req, res)
 		res.send({result: 'success', code: '0', msg: ''});
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
-	});
+	});*/
 }
 /*
 exports.reservIdToCurrentStatus = function(req, res)

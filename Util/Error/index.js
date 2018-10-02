@@ -55,6 +55,7 @@ module.exports = {
 				errorMsg = 'phoneNumber 와 kakaoUserKey 에 해당하는 사용자가 존재하지 않음';
 				break;
 			// user/reserv/match
+			// user/reserv/setname
 			case 800:
 				errorMsg = '매칭되는 예약정보가 존재하지 않음';
 				break;
