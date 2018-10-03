@@ -4,8 +4,6 @@ var errorProc = require('../../../Util/Error');
 
 var mongo = require('../../../MongoDB');
 var mapper = require('../../../DB/mapperController.js');
-
-
 var ObjectId = require('mongodb').ObjectID;
 
 exports.getNotification = function(req, res) {
@@ -21,7 +19,7 @@ exports.getNotification = function(req, res) {
 
 		return mongo.find('Notification', { $and:[{ storeId: ObjectId(_storeId) }, { date: {$gt: new Date(_lastTime)} }] });
 	}).then(function(result) {
-		res.send({ result : 'success', code: '0', msg: '', reservId: result[1]});
+		res.send({ result : 'success', code: '0', msg: '', alarmList: result});
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});

@@ -36,6 +36,7 @@ exports.reservationSearch = function(req, res) {
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
+	
 /*
 	// 값이 있을경우에만 or 연산
 	var orArray = [];

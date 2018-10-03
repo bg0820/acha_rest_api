@@ -22,7 +22,7 @@ exports.info = function(req, res) {
 	mapper.store.tokenCheck(_token).then(function(result) {
 		return mapper.store.userStatisticsInfo(_storeId, _phoneNumberHash);
 	}).then(function(result) {
-		res.send({result: 'success', code: '0', msg: '', userInfo: result });
+		res.send({result: 'success', code: '0', msg: '', userInfo: result});
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});

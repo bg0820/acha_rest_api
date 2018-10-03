@@ -11,7 +11,7 @@ router.get('/info/regCheck', infoController.regCheck);
 // 예약
 router.get('/reserv/search', reservController.reservationSearch);
 router.get('/reserv/edit', reservController.reservationStatusEdit);
-router.get('/reserv/getStatus', reservController.getReservStatus);
+router.get('/reserv/getstatus', reservController.getReservStatus);
 router.get('/reserv/setname', reservController.userSetName);
 
 //router.get('/reserv/currentStatus', reservController.reservIdToCurrentStatus);

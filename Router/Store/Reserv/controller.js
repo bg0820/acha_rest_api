@@ -121,7 +121,7 @@ exports.reservation = function(req, res) {
 			reservDate: _reservTime,
 			reservToken: reservToken,
 			storeName: result.storeName,
-			storePhoneNumber: result.phoneNumber
+			storePhoneNumber: result.storePhoneNumber
 		};
 
 		// 알림톡 서버로 예약 정보 넘겨주면 사용자 카카오톡으로 메시지 전송
@@ -272,6 +272,9 @@ exports.reservationSearch = function(req, res) {
 	mapper.store.tokenCheck(_token).then(function(result) {
 		return mapper.store.reservSearch([_name, _phoneNumberHash, _startDate, _endDate]);
 	}).then(function(result) {
+		for(var i = 0 ; i < result.length; i++)
+			result[i].reservTarget = util.stringToArray(result[i].reservTarget);
+
 		res.send({ result: 'success', code: '0', msg: '', reservList: result})
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
@@ -309,6 +312,7 @@ exports.reservationStatusEdit = function(req, res)
 	if(_status)
 		_status = _status.toLowerCase();
 	var _reason = req.query.reason;
+	var param = null;
 
 	// 값이 모두 있어야함, 이름은 없어도 가능
 	if( !_reservId || !_token || !_status )

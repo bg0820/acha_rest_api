@@ -40,6 +40,7 @@ exports.register = function(req, res) {
 	});*/
 };
 
+// register 하기전에는 무조건 false, register 이후 무조건 true
 exports.regCheck = function(req, res) {
 	var _key = req.query.key;
 	var _kakaoUserKey = req.query.kakaoUserKey;

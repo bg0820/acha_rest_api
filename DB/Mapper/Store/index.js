@@ -20,7 +20,7 @@ module.exports = {
 
 	storeLogin: function(_id, _pw) {
 		return new Promise(function(resolve, reject) {
-			var loginQuery = 'SELECT hex(Store.UUID) AS storeUUID,Token.token FROM acha.Store left outer join acha.Token ON Token.storeUUID = Store.UUID WHERE Store.id = ? and Store.pw = ?';
+			var loginQuery = 'SELECT hex(Store.UUID) AS storeUUID, Store.storeName, Store.phoneNumber, Store.ceoPhoneNumber, Store.fullAddress, Store.roadAddress, Store.detailAddress, Token.token FROM acha.Store LEFT OUTER JOIN acha.Token ON Token.storeUUID = Store.UUID WHERE Store.id = ? and Store.pw = ?';
 
 			sql.select(loginQuery, [_id, _pw]).then(function(rows) {
 				if(rows.length == 0) // 존재하지 않는 아이디
@@ -34,11 +34,11 @@ module.exports = {
 				var insertQuery = "INSERT INTO Token (storeUUID, token) VALUES (UNHEX(?), ?) ON DUPLICATE KEY UPDATE storeUUID = UNHEX(?), token = ?;";
 
 				if(result.token)
-					return result.token;
+					return [result.token, result];
 				else // 없는경우
 				{
 					sql.insert(insertQuery, [result.storeUUID, _token, result.storeUUID, _token])
-					return _token; // 새로 만든 토큰 반환
+					return [_token, result]; // 새로 만든 토큰 반환
 				}
 			}).then(function(result) {
 				resolve(result);
@@ -127,7 +127,9 @@ module.exports = {
 	reserv: function(param, _reservToken) {
 		return new Promise(function(resolve, reject) {
 			// 테이블 이름이 [창가1, 창가2] 로 들어오면 창가1, 창가2로 맞춰줌
+			// TODO : 해결해야할거같음
 			var statisticsInserQuery = "INSERT INTO Statistics (UUID, userUUID, storeUUID) VALUES(UNHEX(REPLACE(UUID(),'-',\"\")), UNHEX(?), UNHEX(?)) ON DUPLICATE KEY UPDATE reservCnt = reservCnt + 1";
+
 			var insertQuery = "INSERT INTO Reserv (UUID, userUUID, storeUUID, reservName, reservNumber, reservTime, reservTarget, reservMemo, reservToken, insertTime) VALUES (UNHEX(REPLACE(UUID(),'-',\"\")), UNHEX(?), UNHEX(?), ?, ?, ?, REPLACE(REPLACE(?, '[', ''), ']', ''), ?, ?, CURRENT_TIMESTAMP)";
 
 			Promise.all([sql.insert(statisticsInserQuery, [param[0], param[1], param[0], param[1]]), sql.insert(insertQuery, param)]).then(function() {
@@ -164,7 +166,7 @@ module.exports = {
 				var _reservedTableList = [];
 				for(var i = 0; i < rows.length; i++)
 					_reservedTableList = util.stringToArray(rows[i].reservTarget)
-
+					console.log(_reservedTableList);
 				resolve(_reservedTableList);
 			}).catch(function(error) {
 				reject(error);
@@ -213,7 +215,7 @@ module.exports = {
 
 	settingGET: function(storeUUID) {
 		return new Promise(function(resolve, reject) {
-			var selectQuery = "SELECT storeName, phoneNumber, ceoPhoneNumber, fullAddress, roadAddress, detailAddress, alarmTalkInterval, targets, regTime FROM Store WHERE UUID = UNHEX(?)";
+			var selectQuery = "SELECT * FROM StoreLeftJoinAlarmTalk WHERE UUID = UNHEX(?)";
 
 			sql.select(selectQuery, [storeUUID]).then(function(rows) {
 				resolve(rows[0]);
@@ -242,8 +244,20 @@ module.exports = {
 			var selectUserPhoneNumberToUUID = "SELECT * FROM UserLeftJoinStatistics WHERE storeUUID = ? and phoneNumberHash = ?";
 
 			sql.select(selectUserPhoneNumberToUUID, [_storeUUID, _phoneNumberHash]).then(function(rows) {
+				console.log(rows.length);
+				var resultJson = {
+					storeNoshowCnt: 0,
+					storeReservCnt: 0,
+					storeReservedCnt: 0,
+					storeStoreCancelCnt: 0,
+					storeUserCancelCnt: 0,
+					storeVisitCnt: 0,
+					totalNoshowCnt: 0,
+					totalReservCnt: 0
+				};
+
 				if(rows.length == 0)
-					throw 1000;
+					resolve(resultJson);
 
 				resolve(rows[0]);
 			}).catch(function(error) {

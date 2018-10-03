@@ -5,9 +5,9 @@ module.exports = {
 	userRegister: function(phoneNumber, phoneNumberHash, kakaoUserKey) {
 		return new Promise(function(resolve, reject) {
 			// 삽입후 phoneNumberHash 있으면 UPDATE
-			var insertQuery = 'INSERT INTO User (phoneNumberHash, phoneNumber, kakoUserKey) VALUES (COALESCE(?, NULL), COALESCE(?, NULL), COALESCE(?, NULL)) ON DUPLICATE KEY UPDATE User SET phoneNumberHash = COALESCE(?, phoneNumberHash), phoneNumber = COALESCE(?, phoneNumber), kakoUserKey = COALESCE(?, kakoUserKey)';
+			var insertQuery = 'INSERT INTO User (phoneNumberHash, phoneNumber, kakoUserKey) VALUES (COALESCE(?, NULL), COALESCE(?, NULL), COALESCE(?, NULL)) ON DUPLICATE KEY UPDATE SET phoneNumberHash = COALESCE(?, phoneNumberHash), phoneNumber = COALESCE(?, phoneNumber), kakoUserKey = COALESCE(?, kakoUserKey)';
 
-			sql.inset(selectQuery, [phoneNumberHash, phoneNumber, kakaoUserKey, phoneNumberHash, phoneNumber, kakaoUserKey]).then(function(rows) {
+			sql.insert(insertQuery, [phoneNumberHash, phoneNumber, kakaoUserKey, phoneNumberHash, phoneNumber, kakaoUserKey]).then(function(rows) {
 				resolve(true);
 			}).catch(function(error) {
 				reject(error);
@@ -20,7 +20,7 @@ module.exports = {
 			// 삽입후 phoneNumberHash 있으면 UPDATE
 			var selectQuery = 'SELECT EXISTS(SELECT 1 FROM User WHERE phoneNumber = ? or kakaoUserKey = ? LIMIT 1) as count;';
 
-			sql.inset(selectQuery, [phoneNumber, kakoUserKey]).then(function(rows) {
+			sql.select(selectQuery, [phoneNumber, kakoUserKey]).then(function(rows) {
 				if(rows[0].count == 0) // kakoUserKey 와 phoneNumber 가입되어있음
 					resolve(false)
 				else
@@ -36,7 +36,7 @@ module.exports = {
 			// 삽입후 phoneNumberHash 있으면 UPDATE
 			var selectQuery = 'SELECT FcmKey.* FROM acha.FcmKey LEFT JOIN acha.Reserv ON Reserv.storeUUID = FcmKey.storeUUID WHERE Reserv.UUID = UNHEX(?)';
 
-			sql.inset(selectQuery, [reservUUID]).then(function(rows) {
+			sql.insert(selectQuery, [reservUUID]).then(function(rows) {
 				var returnArr = [];
 
 				for(var i = 0; i< row.length; i++)

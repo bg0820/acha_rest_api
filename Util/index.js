@@ -41,7 +41,7 @@ module.exports = {
 	stringToArray: function(_string) {
 		if(!_string)
 			return [];
-			
+
 		var resultArray = [];
 		var splitArray = _string.split(',');
 

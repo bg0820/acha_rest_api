@@ -1,5 +1,6 @@
 var HashMap = require('hashmap');
 var log = require('../Util/Log');
+var mapper = require('../DB/mapperController.js');
 var ObjectId = require('mongodb').ObjectID;
 var storeSocketList = new HashMap(); // storeId, socket[] // conmap
 var storeFindList = new HashMap(); // socket, storeId // revConMap
@@ -19,7 +20,8 @@ module.exports = {
 			// 개별 전달
 			// socket.emit('voteStatus', {});
 			socket.on('conn', function(data) {
-				var _storeId = data.storeInfo._id;
+				console.log(data);
+				var _storeId = data.storeInfo.storeUUID;
 				log.connect(_storeId + ', connection()');
 				data.socket = socket;
 
@@ -43,18 +45,21 @@ module.exports = {
 				storeFindList.set(socket, _storeId.toString());
 			});
 
-
-
 			// 매장 프로그램에서 첫 접속시 밀린 알림 요청
 			socket.on('getNotification', function(data) {
 				if(data)
 				{
 					// export 밖에 두면 에러나는데 왜그러지...
-					var mongo = require('../MongoDB');
-
-					mongo.find('Notification', { $and:[{ storeId: ObjectId(data.storeId) }, { date: {$gt: new Date(data.lastTimestamp)} }] }).then(function(result) {
+					// var mongo = require('../MongoDB');
+					mapper.common.getNotification(data.storeId, new Date(data.lastTimestamp)).then(function(result) {
 						socket.emit('getWaitNotification', result);
+					}).catch(function(error) {
+						console.log('getNotification() ', error);
 					});
+
+					/*mongo.find('Notification', { $and:[{ storeId: ObjectId(data.storeId) }, { date: {$gt: new Date(data.lastTimestamp)} }] }).then(function(result) {
+						socket.emit('getWaitNotification', result);
+					});*/
 				}
 			});
 

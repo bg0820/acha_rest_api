@@ -23,7 +23,7 @@ exports.login = function(req, res) {
 	}
 
 	mapper.store.storeLogin(_id, _pw).then(function(result) {
-		res.send({ result : 'success', code: '0', msg: '로그인 성공', token: result });
+		res.send({ result : 'success', code: '0', msg: '로그인 성공', token: result[0], storeInfo: result[1] });
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
