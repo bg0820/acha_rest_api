@@ -34,7 +34,7 @@ module.exports = {
 	pushMsg: function(reservUUID) {
 		return new Promise(function(resolve, reject) {
 			// 삽입후 phoneNumberHash 있으면 UPDATE
-			var selectQuery = 'SELECT FcmKey.* FROM acha.FcmKey LEFT JOIN acha.Reserv ON Reserv.storeUUID = FcmKey.storeUUID WHERE Reserv.UUID = UNHEX(?)';
+			var selectQuery = 'SELECT FcmKey.* FROM acha.FcmKey LEFT JOIN acha.Reserv ON Reserv.storeUUID = FcmKey.storeUUID WHERE Reserv.reservUUID = UNHEX(?)';
 
 			sql.insert(selectQuery, [reservUUID]).then(function(rows) {
 				var returnArr = [];
@@ -64,7 +64,7 @@ module.exports = {
 
 	getReservStatus: function(reservUUID, reservToken) {
 		return new Promise(function(resolve, reject) {
-			var selectQuery = 'SELECT reservStatus, HEX(UUID) as UUID FROM Reserv WHERE UUID = HEX(?) or reservToken = ?';
+			var selectQuery = 'SELECT reservStatus, HEX(reservUUID) as reservUUID FROM Reserv WHERE reservUUID = HEX(?) or reservToken = ?';
 
 			sql.select(selectQuery, [reservUUID, reservToken]).then(function(rows) {
 				if(rows.length == 0)  // 예약이 존재하지 않는경우
@@ -79,13 +79,13 @@ module.exports = {
 
 	reservUserSetName: function(reservUUID, name) {
 		return new Promise(function(resolve, reject) {
-			var selectQuery = 'SELECT HEX(userUUID) as userUUID FROM Reserv WHERE UUID = UNHEX(?)';
+			var selectQuery = 'SELECT HEX(userUUID) as userUUID FROM Reserv WHERE userUUID = UNHEX(?)';
 
 			sql.select(selectQuery, [reservUUID]).then(function(rows) {
 				if(rows.length == 0)
 					throw 800;
 
-				return sql.update('UPDATE User SET name = ? WHERE UUID = UNHEX(?)', [rows[0].userUUID, name]);
+				return sql.update('UPDATE User SET name = ? WHERE userUUID = UNHEX(?)', [rows[0].userUUID, name]);
 			}).then(function(result) {
 				resolve(true);
 			}).catch(function(error) {

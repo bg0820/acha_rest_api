@@ -317,7 +317,7 @@ var self = module.exports = {
 				};
 
 				Notification.pcPushData(storeId, insertQuery);
-				Notification.mobileFcmPush(_type, fcmKeyList, _reservId, _status);
+				// Notification.mobileFcmPush(_type, fcmKeyList, _reservId, _status);
 
 				// 알림 로그
 				var notiPromise = self.insertOne('Notification', insertQuery);

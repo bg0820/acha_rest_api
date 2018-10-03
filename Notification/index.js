@@ -2,10 +2,10 @@ var socketIo = require('./socket.js');
 var fcm = require('./firebase.js');
 
 module.exports = {
-	pcPushData: function(storeId, msgData)
+	pcPushData: function(storeUUID, msgData)
 	{
 		// 매장에서 수정해도 socket 으로는 보냄
-		var sock = socketIo.getStoreIdToSocketArr(storeId);
+		var sock = socketIo.getStoreIdToSocketArr(storeUUID);
 		if(sock)
 		{
 			for(var i = 0 ; i< sock.length; i++)

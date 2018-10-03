@@ -20,25 +20,26 @@ module.exports = {
 
 	storeLogin: function(_id, _pw) {
 		return new Promise(function(resolve, reject) {
-			var loginQuery = 'SELECT hex(Store.UUID) AS storeUUID, Store.storeName, Store.phoneNumber, Store.ceoPhoneNumber, Store.fullAddress, Store.roadAddress, Store.detailAddress, Token.token FROM acha.Store LEFT OUTER JOIN acha.Token ON Token.storeUUID = Store.UUID WHERE Store.id = ? and Store.pw = ?';
+			// 매장과 토큰
+			var loginQuery = 'SELECT hex(Store.storeUUID) AS storeUUID, Store.storeName, Store.phoneNumber, Store.ceoPhoneNumber, Store.fullAddress, Store.roadAddress, Store.detailAddress, Token.token FROM acha.Store LEFT OUTER JOIN acha.Token ON Token.storeUUID = Store.storeUUID WHERE Store.id = ? and Store.pw = ?';
 
 			sql.select(loginQuery, [_id, _pw]).then(function(rows) {
 				if(rows.length == 0) // 존재하지 않는 아이디
 					throw 200;
 
 				return rows[0];
-			}).then(function(result) {
-				var _token = result.storeUUID + '-' + Number(new Date());
+			}).then(function(row) {
+				var _token = row.storeUUID + '-' + Number(new Date());
 
 				// 없을경우 INSERT, 있을경우 UPDATE
 				var insertQuery = "INSERT INTO Token (storeUUID, token) VALUES (UNHEX(?), ?) ON DUPLICATE KEY UPDATE storeUUID = UNHEX(?), token = ?;";
 
-				if(result.token)
-					return [result.token, result];
+				if(row.token)
+					return [row.token, row];
 				else // 없는경우
 				{
-					sql.insert(insertQuery, [result.storeUUID, _token, result.storeUUID, _token])
-					return [_token, result]; // 새로 만든 토큰 반환
+					sql.insert(insertQuery, [row.storeUUID, _token, row.storeUUID, _token])
+					return [_token, row]; // 새로 만든 토큰 반환
 				}
 			}).then(function(result) {
 				resolve(result);
@@ -52,7 +53,7 @@ module.exports = {
 		return new Promise(function(resolve, reject) {
 
 			var selectQuery = 'SELECT EXISTS(SELECT 1 FROM acha.Store WHERE id = ? LIMIT 1) as count';
-			var query = "INSERT INTO Store (UUID, id, pw, storeName, phoneNumber, ceoPhoneNumber, fullAddress, roadAddress, detailAddress, entX, entY, regTime) VALUES (UNHEX(REPLACE(UUID(),'-',\"\")), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);";
+			var query = "INSERT INTO Store (storeUUID, id, pw, storeName, phoneNumber, ceoPhoneNumber, fullAddress, roadAddress, detailAddress, entX, entY, regTime) VALUES (UNHEX(REPLACE(UUID(),'-',\"\")), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);";
 
 			sql.select(selectQuery, [param[0]]).then(function(rows) {
 				if(rows[0].count != 0) // 존재하는 아이디
@@ -102,19 +103,19 @@ module.exports = {
 
 	reservUserCreate: function(_phoneNumberHash, _reservName) {
 		return new Promise(function(resolve, reject) {
-			var isUserQuery = 'SELECT hex(UUID) userUUID FROM User WHERE phoneNumberHash = ?;'
+			var isUserQuery = 'SELECT hex(userUUID) userUUID FROM User WHERE phoneNumberHash = ?;'
 
 			// isUser 유저가 존재하면 뱉어내고, 없으면
 			sql.select(isUserQuery, [_phoneNumberHash]).then(function(rows) {
 				if(rows.length != 0) // 유저가 존재
 					resolve(rows[0].userUUID);
 
-				var userCreateQuery = "INSERT INTO User (UUID, phoneNumberHash, name, firstReservTime) VALUES (UNHEX(REPLACE(UUID(),'-',\"\")), ?, ?, CURRENT_TIMESTAMP)";
+				var userCreateQuery = "INSERT INTO User (userUUID, phoneNumberHash, name, firstReservTime) VALUES (UNHEX(REPLACE(UUID(),'-',\"\")), ?, ?, CURRENT_TIMESTAMP)";
 				return sql.insert(userCreateQuery, [_phoneNumberHash, _reservName]);
 			}).then(function(rows) {
 
 				// 생성된 UUID 리턴해야함
-				var selectUUIDQuery = "SELECT hex(UUID) AS userUUID FROM User WHERE phoneNumberHash = ?";
+				var selectUUIDQuery = "SELECT hex(userUUID) AS userUUID FROM User WHERE phoneNumberHash = ?";
 				return sql.select(selectUUIDQuery, [_phoneNumberHash]);
 			}).then(function(rows) {
 				resolve(rows[0]);
@@ -127,12 +128,22 @@ module.exports = {
 	reserv: function(param, _reservToken) {
 		return new Promise(function(resolve, reject) {
 			// 테이블 이름이 [창가1, 창가2] 로 들어오면 창가1, 창가2로 맞춰줌
-			// TODO : 해결해야할거같음
-			var statisticsInserQuery = "INSERT INTO Statistics (UUID, userUUID, storeUUID) VALUES(UNHEX(REPLACE(UUID(),'-',\"\")), UNHEX(?), UNHEX(?)) ON DUPLICATE KEY UPDATE reservCnt = reservCnt + 1";
+			var isStatisticsExists = "SELECT EXISTS(SELECT 1 FROM acha.Statistics WHERE userUUID = UNHEX(?) and storeUUID = UNHEX(?) LIMIT 1) as count";
+			sql.select(isStatisticsExists, [param[0], param[1]]).then(function(rows) {
+				var insertQuery = "INSERT INTO Statistics (statisticsUUID, userUUID, storeUUID) VALUES(UNHEX(REPLACE(UUID(),'-',\"\")), UNHEX(?), UNHEX(?))";
+				var updateQuery = "UPDATE Statistics SET reservCnt = reservCnt + 1 WHERE userUUID = UNHEX(?) and storeUUID = UNHEX(?)";
 
-			var insertQuery = "INSERT INTO Reserv (UUID, userUUID, storeUUID, reservName, reservNumber, reservTime, reservTarget, reservMemo, reservToken, insertTime) VALUES (UNHEX(REPLACE(UUID(),'-',\"\")), UNHEX(?), UNHEX(?), ?, ?, ?, REPLACE(REPLACE(?, '[', ''), ']', ''), ?, ?, CURRENT_TIMESTAMP)";
+				// 없는경우 INSERT
+				if(rows[0].count == 0)
+					sql.insert(insertQuery, [param[0], param[1]]);
+				else // 있는경우 UPDATE
+					sql.update(updateQuery, [param[0], param[1]]);
+			}).then(function() {
+				var userUpdateQuery = "UPDATE User SET totalReservCnt = totalReservCnt + 1 WHERE userUUID = UNHEX(?)";
+				var insertQuery = "INSERT INTO Reserv (reservUUID, userUUID, storeUUID, reservName, reservNumber, reservTime, reservTarget, reservMemo, reservToken, insertTime) VALUES (UNHEX(REPLACE(UUID(),'-',\"\")), UNHEX(?), UNHEX(?), ?, ?, ?, REPLACE(REPLACE(?, '[', ''), ']', ''), ?, ?, CURRENT_TIMESTAMP)";
 
-			Promise.all([sql.insert(statisticsInserQuery, [param[0], param[1], param[0], param[1]]), sql.insert(insertQuery, param)]).then(function() {
+				return Promise.all([sql.update(userUpdateQuery, [param[0]]), sql.insert(insertQuery, param)]);
+			}).then(function() {
 				// 예약 내용 삽입후 예약 토큰으로 UUID 를 가져와서 ReservLeftJoinStore 테이블 가져오기
 				// param[7] = reservToken
 				var selectQuery = 'SELECT * FROM ReservLeftJoinStore WHERE reservToken = ?';
@@ -148,7 +159,7 @@ module.exports = {
 	reservEdit: function(param) {
 		return new Promise(function(resolve, reject) {
 
-			var updateQuery = 'UPDATE ReservLookupTable SET reservNumber = COALESCE(?, reservNumber), phoneNumber = COALESCE(?, phoneNumber), phoneNumberHash = COALESCE(?, phoneNumberHash), reservTime = COALESCE(?, reservTime), reservName = COALESCE(?, reservName), reservTarget = COALESCE(?, reservTarget), reservMemo = COALESCE(?, reservMemo) WHERE UUID = UNHEX(?)';
+			var updateQuery = 'UPDATE ReservLookupTable SET reservNumber = COALESCE(?, reservNumber), phoneNumber = COALESCE(?, phoneNumber), phoneNumberHash = COALESCE(?, phoneNumberHash), reservTime = COALESCE(?, reservTime), reservName = COALESCE(?, reservName), reservTarget = COALESCE(?, reservTarget), reservMemo = COALESCE(?, reservMemo) WHERE reservUUID = UNHEX(?)';
 			sql.update(updateQuery, param).then(function(rows) {
 				resolve(rows);
 			}).catch(function(error) {
@@ -215,7 +226,7 @@ module.exports = {
 
 	settingGET: function(storeUUID) {
 		return new Promise(function(resolve, reject) {
-			var selectQuery = "SELECT * FROM StoreLeftJoinAlarmTalk WHERE UUID = UNHEX(?)";
+			var selectQuery = "SELECT * FROM StoreLeftJoinAlarmTalk WHERE storeUUID = ?";
 
 			sql.select(selectQuery, [storeUUID]).then(function(rows) {
 				resolve(rows[0]);
@@ -229,7 +240,7 @@ module.exports = {
 		return new Promise(function(resolve, reject) {
 			// 테이블 이름이 [창가1, 창가2] 로 들어오면 창가1, 창가2로 맞춰줌
 			// 알림톡 주기도 마찬가지
-			var updateQuery = "UPDATE Store SET alarmTalkInterval = COALESCE(REPLACE(REPLACE(?, '[', ''), ']', ''), alarmTalkInterval), targets = COALESCE(REPLACE(REPLACE(?, '[', ''), ']', ''), targets) WHERE UUID = UNHEX(?)";
+			var updateQuery = "UPDATE Store SET alarmTalkInterval = COALESCE(REPLACE(REPLACE(?, '[', ''), ']', ''), alarmTalkInterval), targets = COALESCE(REPLACE(REPLACE(?, '[', ''), ']', ''), targets) WHERE storeUUID = UNHEX(?)";
 
 			sql.update(updateQuery, [_alarmTalkInterval, _tables, _storeUUID]).then(function(rows) {
 				resolve(true);
@@ -241,7 +252,8 @@ module.exports = {
 
 	userStatisticsInfo: function(_storeUUID, _phoneNumberHash) {
 		return new Promise(function(resolve, reject) {
-			var selectUserPhoneNumberToUUID = "SELECT * FROM UserLeftJoinStatistics WHERE storeUUID = ? and phoneNumberHash = ?";
+			// 전체는 예약횟수랑, 노쇼만 보여주고 매장은 다보여줌
+			var selectUserPhoneNumberToUUID = "SELECT totalReservCnt, totalNoshowCnt, storeReservCnt, storeReservedCnt, storeStoreCancelCnt, storeUserCancelCnt, storeVisitCnt, storeNoshowCnt FROM UserLeftJoinStatistics WHERE storeUUID = ? and phoneNumberHash = ?";
 
 			sql.select(selectUserPhoneNumberToUUID, [_storeUUID, _phoneNumberHash]).then(function(rows) {
 				console.log(rows.length);
