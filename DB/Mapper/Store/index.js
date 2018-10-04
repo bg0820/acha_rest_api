@@ -186,8 +186,7 @@ module.exports = {
 
 	reservSearch: function(param) {
 		return new Promise(function(resolve, reject) {
-			var searchQuery = 'SELECT * FROM ReservLookupTable WHERE reservName = ? or phoneNumberHash = ? or (reservTime >= ? and reservTime < ?)';
-
+			var searchQuery = 'SELECT * FROM acha.ReservLookupTable WHERE reservName = ? or phoneNumberHash = ? or  (reservTime >= ? AND reservTime < ?) or (? < ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) and ? > ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) )';
 			sql.select(searchQuery, param).then(function(rows) {
 				resolve(rows);
 			}).catch(function(error) {

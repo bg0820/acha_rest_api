@@ -272,7 +272,7 @@ exports.reservationSearch = function(req, res) {
 		_name = _name.trim(); // 이름 공백제거
 
 	mapper.store.tokenCheck(_token).then(function(result) {
-		return mapper.store.reservSearch([_name, _phoneNumberHash, _startDate, _endDate]);
+		return mapper.store.reservSearch([_name, _phoneNumberHash, _startDate, _endDate, _startDate, _endDate]);
 	}).then(function(result) {
 		for(var i = 0 ; i < result.length; i++)
 			result[i].reservTarget = util.stringToArray(result[i].reservTarget);
