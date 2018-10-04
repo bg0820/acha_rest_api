@@ -20,7 +20,6 @@ module.exports = {
 			// 개별 전달
 			// socket.emit('voteStatus', {});
 			socket.on('conn', function(data) {
-				console.log(data);
 				var _storeId = data.storeInfo.storeUUID;
 				log.connect(_storeId + ', connection()');
 				data.socket = socket;
@@ -47,6 +46,7 @@ module.exports = {
 
 			// 매장 프로그램에서 첫 접속시 밀린 알림 요청
 			socket.on('getNotification', function(data) {
+				console.log('getNotification() ', data);
 				if(data)
 				{
 					// export 밖에 두면 에러나는데 왜그러지...

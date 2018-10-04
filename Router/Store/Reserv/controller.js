@@ -64,6 +64,7 @@ exports.reservation = function(req, res) {
 	}
 	var _reservNumber = req.body.reservNumber;
 	var _reservTime = req.body.reservTime;
+	var _reservTimeSpanMin = req.body.reservTimeSpanMin;
 	var _name = req.body.name;
 	if(_name)
 		_name = _name.trim(); // 이름 공백제거
@@ -76,7 +77,7 @@ exports.reservation = function(req, res) {
 
 	// 값이 모두 있어야함, 매니저와 메모 값은 없어도 됌
 	if(!_token || !_phoneNumber || !_reservNumber ||
-	   !_reservTime || !_tableName)
+	   !_reservTime || !_tableName || !_reservTimeSpanMin)
 	{
 		errorProc.errorProcessing(100, res, req);
 		return;
@@ -103,6 +104,7 @@ exports.reservation = function(req, res) {
 			_name,
 			_reservNumber,
 			new Date(Number(_reservTime)),
+			_reservTimeSpanMin,
 			_tableName,
 			_memo,
 			reservToken
@@ -348,7 +350,7 @@ exports.reservationStatusEdit = function(req, res)
 }
 
 exports.reservationEdit = function(req, res) {
-	var objForUpdate = {};
+	// var objForUpdate = {};
 	var _token = req.body.token;
 	var _storeId;
 	if(_token)
@@ -372,8 +374,6 @@ exports.reservationEdit = function(req, res) {
 	mapper.store.tokenCheck(_token).then(function(result) {
 		var updateParam = [
 			req.body.reservNumber,
-			_phoneNumber,
-			_phoneNumberHash,
 			new Date(Number(req.body.reservTime)),
 			req.body.reservName,
 			req.body.tableName,
@@ -383,7 +383,6 @@ exports.reservationEdit = function(req, res) {
 
 		return mapper.store.reservEdit(updateParam);
 	}).then(function(result) {
-		console.log(result);
 		res.send({ result : 'success', code: '0', msg: '예약 수정 완료'});
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);

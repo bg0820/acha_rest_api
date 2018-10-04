@@ -18,7 +18,7 @@ exports.settingPOST = function(req, res) {
 	var _alarmInterval = req.body.alarmInterval;
 	if(_alarmInterval)
 		alaramIntervalArr = util.stringToArray(_alarmInterval);
-
+	var _defaultReservTimeSpanMin = req.body.defaultReservTimeSpanMin;
 	// 알림 주기 개수가 3개 이상인경우 오류메시지
 	if(alaramIntervalArr.length > 2)
 	{
@@ -27,7 +27,7 @@ exports.settingPOST = function(req, res) {
 	}
 
 	mapper.store.tokenCheck(_token).then(function(result) {
-		return mapper.store.settingPOST(_alarmInterval, _tables, _storeId);
+		return mapper.store.settingPOST(_alarmInterval, _tables, _defaultReservTimeSpanMin, _storeId);
 	}).then(function(result) {
 		res.send({ result : 'success', code: '0', msg: '업데이트 완료'});
 	}).catch(function(error) {

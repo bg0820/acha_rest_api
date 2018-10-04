@@ -1,7 +1,7 @@
 module.exports = (
 	function() {
 	  return {
-	    host: "localhost",
+	    host: "acha.io",
 	    user: "acha",
 	    password: "acha09!!",
 	    database: "acha",

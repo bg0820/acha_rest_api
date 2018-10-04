@@ -21,7 +21,7 @@ module.exports = {
 	storeLogin: function(_id, _pw) {
 		return new Promise(function(resolve, reject) {
 			// 매장과 토큰
-			var loginQuery = 'SELECT hex(Store.storeUUID) AS storeUUID, Store.storeName, Store.phoneNumber, Store.ceoPhoneNumber, Store.fullAddress, Store.roadAddress, Store.detailAddress, Token.token FROM acha.Store LEFT OUTER JOIN acha.Token ON Token.storeUUID = Store.storeUUID WHERE Store.id = ? and Store.pw = ?';
+			var loginQuery = 'SELECT hex(Store.storeUUID) AS storeUUID, Store.storeName, Store.phoneNumber, Store.ceoPhoneNumber, Store.fullAddress, Store.roadAddress, Store.detailAddress, Store.defaultReservTimeSpanMin, Token.token FROM acha.Store LEFT OUTER JOIN acha.Token ON Token.storeUUID = Store.storeUUID WHERE Store.id = ? and Store.pw = ?';
 
 			sql.select(loginQuery, [_id, _pw]).then(function(rows) {
 				if(rows.length == 0) // 존재하지 않는 아이디
@@ -140,7 +140,7 @@ module.exports = {
 					sql.update(updateQuery, [param[0], param[1]]);
 			}).then(function() {
 				var userUpdateQuery = "UPDATE User SET totalReservCnt = totalReservCnt + 1 WHERE userUUID = UNHEX(?)";
-				var insertQuery = "INSERT INTO Reserv (reservUUID, userUUID, storeUUID, reservName, reservNumber, reservTime, reservTarget, reservMemo, reservToken, insertTime) VALUES (UNHEX(REPLACE(UUID(),'-',\"\")), UNHEX(?), UNHEX(?), ?, ?, ?, REPLACE(REPLACE(?, '[', ''), ']', ''), ?, ?, CURRENT_TIMESTAMP)";
+				var insertQuery = "INSERT INTO Reserv (reservUUID, userUUID, storeUUID, reservName, reservNumber, reservTime, reservTimeSpanMin, reservTarget, reservMemo, reservToken, insertTime) VALUES (UNHEX(REPLACE(UUID(),'-',\"\")), UNHEX(?), UNHEX(?), ?, ?, ?, ?, REPLACE(REPLACE(?, '[', ''), ']', ''), ?, ?, CURRENT_TIMESTAMP)";
 
 				return Promise.all([sql.update(userUpdateQuery, [param[0]]), sql.insert(insertQuery, param)]);
 			}).then(function() {
@@ -158,8 +158,7 @@ module.exports = {
 
 	reservEdit: function(param) {
 		return new Promise(function(resolve, reject) {
-
-			var updateQuery = 'UPDATE ReservLookupTable SET reservNumber = COALESCE(?, reservNumber), phoneNumber = COALESCE(?, phoneNumber), phoneNumberHash = COALESCE(?, phoneNumberHash), reservTime = COALESCE(?, reservTime), reservName = COALESCE(?, reservName), reservTarget = COALESCE(?, reservTarget), reservMemo = COALESCE(?, reservMemo) WHERE reservUUID = UNHEX(?)';
+			var updateQuery = 'UPDATE Reserv SET reservNumber = COALESCE(?, reservNumber), reservTime = COALESCE(?, reservTime), reservName = COALESCE(?, reservName), reservTarget = COALESCE(?, reservTarget), reservMemo = COALESCE(?, reservMemo) WHERE reservUUID = UNHEX(?)';
 			sql.update(updateQuery, param).then(function(rows) {
 				resolve(rows);
 			}).catch(function(error) {
@@ -170,9 +169,9 @@ module.exports = {
 
 	reservTableExistsCheck: function(storeUUID, startTime, endTime) {
 		return new Promise(function(resolve, reject) {
-			var isTableCheckQuery = "SELECT reservTarget FROM acha.Reserv WHERE storeUUID = UNHEX(?) and (reservTime BETWEEN ? AND ?) and (reservStatus = 'reservwait' or reservStatus = 'reserved' or reservStatus = 'visit' or reservStatus = 'noshow')";
+			var isTableCheckQuery = "SELECT reservTarget FROM acha.Reserv WHERE storeUUID = UNHEX('18F55028C40411E8908B0AAF747F9AA0') and ((reservTime >= ? AND reservTime < ?) or (? < ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) and ? > ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)))) and NOT (reservStatus = 'usercancel' or reservStatus = 'storecancel')";
 
-			sql.select(isTableCheckQuery, [storeUUID, startTime, endTime]).then(function(rows) {
+			sql.select(isTableCheckQuery, [storeUUID, startTime, endTime, startTime, endTime]).then(function(rows) {
 				// 테이블 이름만 가져와서 _reservedTableList 배열에 push 하고 보내줌
 				var _reservedTableList = [];
 				for(var i = 0; i < rows.length; i++)
@@ -236,13 +235,13 @@ module.exports = {
 		});
 	},
 
-	settingPOST: function(_alarmTalkInterval, _tables, _storeUUID) {
+	settingPOST: function(_alarmTalkInterval, _tables, _defaultReservTimeSpanMin, _storeUUID) {
 		return new Promise(function(resolve, reject) {
 			// 테이블 이름이 [창가1, 창가2] 로 들어오면 창가1, 창가2로 맞춰줌
 			// 알림톡 주기도 마찬가지
-			var updateQuery = "UPDATE Store SET alarmTalkInterval = COALESCE(REPLACE(REPLACE(?, '[', ''), ']', ''), alarmTalkInterval), targets = COALESCE(REPLACE(REPLACE(?, '[', ''), ']', ''), targets) WHERE storeUUID = UNHEX(?)";
+			var updateQuery = "UPDATE Store SET alarmTalkInterval = COALESCE(REPLACE(REPLACE(?, '[', ''), ']', ''), alarmTalkInterval), targets = COALESCE(REPLACE(REPLACE(?, '[', ''), ']', ''), targets), defaultReservTimeSpanMin = COALESCE(?, defaultReservTimeSpanMin) WHERE storeUUID = UNHEX(?)";
 
-			sql.update(updateQuery, [_alarmTalkInterval, _tables, _storeUUID]).then(function(rows) {
+			sql.update(updateQuery, [_alarmTalkInterval, _tables, _defaultReservTimeSpanMin, _storeUUID]).then(function(rows) {
 				resolve(true);
 			}).catch(function(error) {
 				reject(error);
