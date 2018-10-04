@@ -1,6 +1,4 @@
-//var socketIo = require('../../../Socket/socket.js');
-var mongo = require('../../../MongoDB');
-var ObjectId = require('mongodb').ObjectID;
+
 
 exports.test = function(req, res) {
 
@@ -10,7 +8,7 @@ exports.test = function(req, res) {
 };
 
 exports.userInit = function(req, res) {
-	var _phoneNumber = req.query.phoneNumber;
+	/*var _phoneNumber = req.query.phoneNumber;
 	var updateQuery = {
 		$unset: { reservList: 1 },
 		$set: {
@@ -35,6 +33,6 @@ exports.userInit = function(req, res) {
 	}).catch(function(error) {
 		res.send('failed');
 		console.log(error);
-	});
+	});*/
 
 }

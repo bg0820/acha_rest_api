@@ -1,10 +1,7 @@
-var util = require('../../../Util');
-var log = require('../../../Util/Log');
-var errorProc = require('../../../Util/Error');
-
-var mapper = require('../../../DB/mapperController.js');
-var mongo = require('../../../MongoDB');
-var ObjectId = require('mongodb').ObjectID;
+const util = require('../../../Util');
+const log = require('../../../Util/Log');
+const errorProc = require('../../../Util/Error');
+const mapper = require('../../../DB/mapperController.js');
 
 exports.register = function(req, res) {
 	// DONE - DONE : 폰번호가 등록안되있으면 폰번호 까지 등록
@@ -28,16 +25,6 @@ exports.register = function(req, res) {
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
-	/*
-	var updateFilterQuery = { phoneNumberHash: _phoneNumberHash };
-	var updateQuery = { $set: {phoneNumberHash: _phoneNumberHash, phoneNumber: _phoneNumber, kakaoUserKey: _kakaoUserKey } };
-	var updateOption = { upsert: true };
-
-	mongo.updateOne('User', updateFilterQuery, updateQuery, updateOption).then(function(result) {
-		res.send({ result : 'success', code: '0',  msg: ''});
-	}).catch(function(error) {
-		errorProc.errorProcessing(error, res, req);
-	});*/
 };
 
 // register 하기전에는 무조건 false, register 이후 무조건 true
@@ -59,13 +46,4 @@ exports.regCheck = function(req, res) {
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
-	/*
-	mongo.findOne('User', {kakaoUserKey: _kakaoUserKey}).then(function(result) {
-		if(result) // 카카오 유저키 가입되어있음
-			res.send({ result : 'success', code: '0', msg: '', isReg: true});
-		else
-			res.send({ result : 'success', code: '0',  msg: '', isReg: false});
-	}).catch(function(error) {
-		errorProc.errorProcessing(error, res, req);
-	});*/
 };

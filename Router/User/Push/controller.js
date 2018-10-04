@@ -1,12 +1,8 @@
-var util = require('../../../Util');
-var log = require('../../../Util/Log');
-var errorProc = require('../../../Util/Error');
-
-var mapper = require('../../../DB/mapperController.js');
-
-var mongo = require('../../../MongoDB');
-var ObjectId = require('mongodb').ObjectID;
-var Notification = require('../../../Notification');
+const util = require('../../../Util');
+const log = require('../../../Util/Log');
+const errorProc = require('../../../Util/Error');
+const mapper = require('../../../DB/mapperController.js');
+const Notification = require('../../../Notification');
 
 // user/push
 exports.pushMsg = function(req, res)
@@ -37,22 +33,4 @@ exports.pushMsg = function(req, res)
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
-
-	/*
-	mongo.findOne('Reserv', {_id: ObjectId(_reservId)}, {storeId: 1}).then(function(result) {
-		return mongo.findOne('Store', {_id: ObjectId(result.storeId)}, {_id: 0, fcmKeyList: 1});
-	}).then(function(result) {
-		var msgData = {
-			reservId: _reservId,
-			changeStatus: _status,
-			title: _msg.title,
-			content: _msg.content
-		}
-
-		Notification.mobileFcmPush('User', result.fcmKeyList, _msg.title, _msg.content);
-	}).then(function(result) {
-		res.send({ result : 'success', code: '0', msg: '성공'});
-	}).catch(function(error) {
-		errorProc.errorProcessing(error, res, req);
-	});*/
 }

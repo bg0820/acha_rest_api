@@ -1,10 +1,10 @@
-var HashMap = require('hashmap');
-var log = require('../Util/Log');
-var mapper = require('../DB/mapperController.js');
-var ObjectId = require('mongodb').ObjectID;
-var storeSocketList = new HashMap(); // storeId, socket[] // conmap
-var storeFindList = new HashMap(); // socket, storeId // revConMap
-var _io;
+const HashMap = require('hashmap');
+const log = require('../Util/Log');
+const mapper = require('../DB/mapperController.js');
+const ObjectId = require('mongodb').ObjectID;
+const storeSocketList = new HashMap(); // storeId, socket[] // conmap
+const storeFindList = new HashMap(); // socket, storeId // revConMap
+const _io;
 
 module.exports = {
 	// StoreId TO Socket => StoreId -> Socket[]
@@ -56,10 +56,6 @@ module.exports = {
 					}).catch(function(error) {
 						console.log('getNotification() ', error);
 					});
-
-					/*mongo.find('Notification', { $and:[{ storeId: ObjectId(data.storeId) }, { date: {$gt: new Date(data.lastTimestamp)} }] }).then(function(result) {
-						socket.emit('getWaitNotification', result);
-					});*/
 				}
 			});
 

@@ -1,37 +1,8 @@
-var util = require('../../../Util');
-var log = require('../../../Util/Log');
-var errorProc = require('../../../Util/Error');
-
-var mongo = require('../../../MongoDB');
-var mapper = require('../../../DB/mapperController.js');
-var ObjectId = require('mongodb').ObjectID;
-
-/*
-// 유저 존재 확인후 생성
-function userCreate(_phoneNumber, _phoneNumberHash, _name)
-{
-	return new Promise(function(resolve, reject) {
-		mongo.findOne('User', {phoneNumberHash: _phoneNumberHash}).then(function(result) {
-			if(result) // 유저가 존재함
-				resolve(result._id);
-			else // 유저가 존재하지 않음
-			{
-				var query = {
-					phoneNumber: _phoneNumber,
-					phoneNumberHash: _phoneNumberHash,
-					name: _name
-				};
-				return mongo.insertOne('User', query);
-			}
-		}).then(function(result) {
-			resolve(result.insertedId);
-		}).catch(function(error) {
-			reject(error);
-		});
-	});
-}*/
-
-var count = 0;
+const util = require('../../../Util');
+const log = require('../../../Util/Log');
+const errorProc = require('../../../Util/Error');
+const mapper = require('../../../DB/mapperController.js');
+let count = 0;
 
 function generateReservToken()
 {
@@ -136,61 +107,6 @@ exports.reservation = function(req, res) {
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
-
-/*
-	mongo.tokenCheck(_token).then(function(result) {
-		if(result) // 에러코드 존재
-			throw result;
-
-		return userCreate(_phoneNumber, _phoneNumberHash, _name);
-	}).then(function(result) {
-		var insertQuery = {
-			storeId: ObjectId(_storeId),
-			userId: ObjectId(result),
-			phoneNumber: _phoneNumber,
-			name: _name,
-			reservNumber: _reservNumber,
-			reservTime: new Date(Number(_reservTime)),
-			tableName: _tableName,
-			memo: _memo,
-			date:  new Date(),
-			reservToken: _reservToken
-		};
-
-		return mongo.insertOne('Reserv', insertQuery);
-	}).then(function(result) {
-		var storePromise = mongo.findOne('Store', {_id: ObjectId(_storeId)});;
-
-		// 매장, 고객 reservList 에 예약 정보 추가
-		var storeUpdateQuery = { $addToSet: {reservList: ObjectId(result.insertedId)}};
-		var userUpdateQuery = { $addToSet: {reservList: ObjectId(result.insertedId)}};
-
-		var storeUpdatePromise = mongo.update('Stroe', {_id: ObjectId(_storeId)}, storeUpdateQuery, {upsert: false});
-		var userUpdatePromise = mongo.update('User', {phoneNumberHash: _phoneNumberHash}, userUpdateQuery, { upsert: false });
-
-		return Promise.all([storePromise, storeUpdatePromise, userUpdatePromise, result.insertedId]);
-	}).then(function(result) {
-		var _reservId = result[3].toString();
-		mongo.updateStatistics(_reservId, 'reservwait', 'Store', null);
-
-		// 알림톡 서버로 예약 정보 넘겨주면 사용자에게 핸드폰번호로 문자 전송
-		var parm = {
-			reservId: _reservId,
-			reservName: _name,
-			reservNumber: _reservNumber,
-			phoneNumber: _phoneNumber,
-			reservDate: _reservTime,
-			reservToken: _reservToken,
-			storeName: result[0].storeName,
-			storePhoneNumber: result[0].phoneNumber
-		};
-
-		return Promise.all([util.requestPost('http://test.acha.io:5000/reserv/regist', parm), result[3]]); // 알림톡 서버로 값 보내줌
-	}).then(function(result) {
-		res.send({ result : 'success', code: '0', msg: '', reservId: result[1]});
-	}).catch(function(error) {
-		errorProc.errorProcessing(error, res, req);
-	});*/
 };
 
 // 예약 시간에 대한 테이블에 예약 존재 체크
@@ -213,43 +129,6 @@ exports.reservTableExistsCheck = function(req, res) {
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
-/*
-	mongo.tokenCheck(_token).then(function(result) {
-		if(result) // 에러코드 존재
-			throw result;
-	}).then(function() {
-
-
-		var aggregateQuery = [
-			{ $match: { $and: [
-				{storeId: ObjectId(_storeId)},
-				{reservTime: {$gte: startTime, $lte: endTime}},
-				{$or: [
-					{currentStatus: 'reservwait'},
-					{currentStatus: 'reserved'},
-					{currentStatus: 'visit'},
-					{currentStatus: 'noshow'}
-				]}
-			]}},
-			{ $project: { tableName: 1, _id: 0 } },
-		];
-
-		return mongo.aggregate('Reserv', aggregateQuery);
-	}).then(function(result) {
-		// 테이블 이름만 가져와서 _reservedTableList 배열에 push 하고 보내줌
-		var _reservedTableList = [];
-		for(var i = 0; i < result.length; i++)
-		{
-			var tableName = result[i].tableName;
-
-			for(var j = 0; j < tableName.length; j++)
-				_reservedTableList.push(tableName[j]);
-		}
-
-		res.send({result: 'success', code: '0', msg: '', reservedTableList: _reservedTableList});
-	}).catch(function(error) {
-		errorProc.errorProcessing(error, res, req);
-	});*/
 }
 
 
@@ -281,26 +160,6 @@ exports.reservationSearch = function(req, res) {
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
-		/*
-	mongo.tokenCheck(_token).then(function(result) {
-		if(result) // 에러코드 존재
-			throw result;
-
-		// 값이 있을경우에만 or 연산
-		var orArray = [];
-		if(_name)
-			orArray.push({ name: _name });
-		if(_phoneNumber)
-			orArray.push({ phoneNumber: _phoneNumber });
-		if(_startDate && _endDate)
-			orArray.push({ reservTime: { '$gte': new Date(Number(_startDate)), '$lt': new Date(Number(_endDate)) }});
-
-		return mongo.find('Reserv', {$and: [{storeId: ObjectId(_storeId)}, {$or: orArray}]});
-	}).then(function(result) {
-		res.send({ result: 'success', code: '0', msg: '', reservList: result})
-	}).catch(function(error) {
-		errorProc.errorProcessing(error, res, req);
-	});*/
 };
 
 exports.reservationStatusEdit = function(req, res)
@@ -334,19 +193,6 @@ exports.reservationStatusEdit = function(req, res)
 		errorProc.errorProcessing(error, res, req);
 	});
 
-	/*
-	mongo.tokenCheck(_token).then(function(result) {
-		if(result) // 에러코드 존재
-			throw result;
-		var param = null;
-		if(_status == 'storecancel')
-			param = { reason: _reason };
-		return mongo.updateStatistics(_reservId, _status, 'Store', param);
-	}).then(function(result) {
-		res.send({ result : 'success', code: '0', msg: '성공'});
-	}).catch(function(error) {
-		errorProc.errorProcessing(error, res, req);
-	});*/
 }
 
 exports.reservationEdit = function(req, res) {
@@ -387,26 +233,6 @@ exports.reservationEdit = function(req, res) {
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
-/*
-	if(req.body.reservNumber) objForUpdate.reservNumber = req.body.reservNumber;
-	if(req.body.phoneNumber) objForUpdate.phoneNumber = req.body.phoneNumber.replace(/-/gi, '');
-	// if(req.body.manager) objForUpdate.manager = req.body.manager;
-	if(req.body.reservTime) objForUpdate.reservTime = new Date(Number(req.body.reservTime));  // timestamp
-	//if(req.body.reservMoney) objForUpdate.reservMoney = req.body.reservMoney;
-	if(req.body.name) objForUpdate.name = req.body.name;
-	if(req.body.tableName) objForUpdate.tableName = req.body.tableName;
-	if(req.body.memo) objForUpdate.memo = req.body.memo;
-
-	mongo.tokenCheck(_token).then(function(result) {
-		if(result) // 에러코드 존재
-			throw result;
-
-		return mongo.updateOne('Reserv', {_id: ObjectId(_reservId)}, {$set: objForUpdate}, { upsert: false });
-	}).then(function(result) {
-		res.send({ result : 'success', code: '0', msg: '예약 수정 완료'});
-	}).catch(function(error) {
-		errorProc.errorProcessing(error, res, req);
-	});*/
 };
 
 exports.reservationDateSearch = function(req, res) {
@@ -475,18 +301,4 @@ exports.reservInQuery = function(req, res) {
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
-
-/*
-	mongo.tokenCheck(_token).then(function(result) {
-		if(result) // 에러코드 존재
-			throw result;
-		return mongo.findOne('Reserv', {$and: [{_id: ObjectId(_reservId)}, {storeId: ObjectId(_storeId)}]}, {userId: 0, date: 0, statusList: 0, reservToken: 0});
-	}).then(function(result) {
-		if(!result)
-			throw 9701;
-
-		res.send({result: 'success', code: '0', msg: '', reserv: result});
-	}).catch(function(error) {
-		errorProc.errorProcessing(error, res, req);
-	});*/
 }

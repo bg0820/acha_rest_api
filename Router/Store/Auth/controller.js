@@ -2,9 +2,7 @@ var util = require('../../../Util');
 var log = require('../../../Util/Log');
 var errorProc = require('../../../Util/Error');
 
-var mongo = require('../../../MongoDB');
 var mapper = require('../../../DB/mapperController.js');
-var ObjectId = require('mongodb').ObjectID;
 
 exports.login = function(req, res) {
     var _id = req.body.id;
@@ -27,27 +25,6 @@ exports.login = function(req, res) {
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
-/*
-	// TODO : 가게 정보 로그인시에 안주는걸로 description
-	mongo.findOne('Store', { id: _id, pw: _pw }, {_id: 1, storeName: 1, phoneNumber: 1, ceoPhoneNumber: 1, address: 1, roadAddress: 1, detailAddress: 1}).then(function(result) {
-		if(!result) // 존재하지 않는 아이디
-			throw 200;
-
-		// 토큰 존재 여부 검사
-		return Promise.all([mongo.findOne('Token', {storeId: ObjectId(result._id)}, {token: 1}), result]);
-	}).then(function(result) {
-		var _token = result[1]._id + '-' + Number(new Date());
-
-		if(!result[0]) // Token 발행이 처음인경우 Token 발행
-			return Promise.all([mongo.update('Token', { storeId: ObjectId(result[1]._id) }, { $set: {token: _token} }, { upsert: true }), _token, result]);
-		else // Token 이 있는경우 기존에 있던 Token 전송
-			return Promise.all([{}, result[0].token, result[1]]);
-	}).then(function(result) {
-		// result[1] = 토큰, result[1] = 매장 정보
-		res.send({ result : 'success', code: '0', msg: '로그인 성공', token: result[1], storeInfo: result[2]});
-	}).catch(function(error) {
-		errorProc.errorProcessing(error, res, req);
-	});*/
 };
 
 exports.register = function(req, res) {
@@ -106,33 +83,6 @@ exports.register = function(req, res) {
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
-
-/*
-	mongo.countDocuments('Store', {id: _id}).then(function(result) {
-		if(result != 0) // 존재하는 아이디
-			throw 300;
-
-		var param = [_id, hash, _storeName, _phoneNumber, _ceoPhoneNumber, _address, _roadAddress, _detailAddress, _entX, _entY];
-		var insertQuery = {
-			id: _id,
-			pw: hash,
-			storeName: _storeName,
-			phoneNumber: _phoneNumber,
-			ceoPhoneNumber: _ceoPhoneNumber,
-			address: _address,
-			roadAddress: _roadAddress,
-			detailAddress: _detailAddress,
-			entX: _entX,
-			entY: _entY
-		};
-		//
-
-		return Promise.all([mapper.storeRegister(param), mongo.insert('Store', insertQuery)]);
-	}).then(function(result) {
-		res.send({ result : 'success', code: '0', msg: '회원가입 성공'});
-	}).catch(function(error) {
-		errorProc.errorProcessing(error, res, req);
-	});*/
 };
 
 exports.registerPage = function(req, res) {

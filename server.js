@@ -6,7 +6,6 @@ var http = require('http').Server(app);
 var crypto = require('crypto');
 // User Require
 var database = require('./DB/connection.js');
-var mongo = require('./MongoDB');
 var log = require('./Util/Log');
 
 var bodyParser = require('body-parser');
@@ -34,9 +33,8 @@ app.use(function(req, res, next) {
 	next();
 });
 
-// 몽고 DB 연결
+// DB 연결
 database.init();
-mongo.connect();
 // Socket IO Start
 socketIo.start(io);
 
