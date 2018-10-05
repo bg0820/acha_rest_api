@@ -29,7 +29,9 @@ router.get('/reserv/isCheck', reservController.reservTableExistsCheck);
 router.get('/reserv/inquery', reservController.reservInQuery);
 
 // 세팅
-router.post('/setting', settingController.settingPOST);
+router.post('/setting/targets', settingController.targetSetting);
+router.post('/setting/alarm', settingController.alarmSetting);
+router.post('/setting/reservTime', settingController.defaultReservTimeSpanMinSetting);
 router.get('/setting', settingController.settingGET);
 
 // 고객

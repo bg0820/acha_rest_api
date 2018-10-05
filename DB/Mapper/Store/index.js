@@ -145,10 +145,11 @@ module.exports = {
 				return Promise.all([sql.update(userUpdateQuery, [param[0]]), sql.insert(insertQuery, param)]);
 			}).then(function() {
 				// 예약 내용 삽입후 예약 토큰으로 UUID 를 가져와서 ReservLeftJoinStore 테이블 가져오기
-				// param[7] = reservToken
+				// param[8] = reservToken
 				var selectQuery = 'SELECT * FROM ReservLeftJoinStore WHERE reservToken = ?';
-				return sql.select(selectQuery, [param[7]]);
+				return sql.select(selectQuery, [param[8]]);
 			}).then(function(result) {
+				console.log(result);
 				resolve(result[0]);
 			}).catch(function(error) {
 				reject(error);
@@ -169,14 +170,13 @@ module.exports = {
 
 	reservTableExistsCheck: function(storeUUID, startTime, endTime) {
 		return new Promise(function(resolve, reject) {
-			var isTableCheckQuery = "SELECT reservTarget FROM acha.Reserv WHERE storeUUID = UNHEX('18F55028C40411E8908B0AAF747F9AA0') and ((reservTime >= ? AND reservTime < ?) or (? < ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) and ? > ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)))) and NOT (reservStatus = 'usercancel' or reservStatus = 'storecancel')";
+			var isTableCheckQuery = "SELECT reservTarget FROM acha.Reserv WHERE storeUUID = UNHEX(?) and ((reservTime >= ? AND reservTime < ?) or (? < ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) and ? > ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)))) and NOT (reservStatus = 'usercancel' or reservStatus = 'storecancel')";
 
 			sql.select(isTableCheckQuery, [storeUUID, startTime, endTime, startTime, endTime]).then(function(rows) {
 				// 테이블 이름만 가져와서 _reservedTableList 배열에 push 하고 보내줌
 				var _reservedTableList = [];
 				for(var i = 0; i < rows.length; i++)
 					_reservedTableList = util.stringToArray(rows[i].reservTarget)
-					console.log(_reservedTableList);
 				resolve(_reservedTableList);
 			}).catch(function(error) {
 				reject(error);
@@ -186,7 +186,7 @@ module.exports = {
 
 	reservSearch: function(param) {
 		return new Promise(function(resolve, reject) {
-			var searchQuery = 'SELECT * FROM acha.ReservLookupTable WHERE reservName = ? or phoneNumberHash = ? or  (reservTime >= ? AND reservTime < ?) or (? < ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) and ? > ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) )';
+			var searchQuery = 'SELECT * FROM acha.ReservLookupTable WHERE storeUUID = UNHEX(?) and (reservName = ? or phoneNumberHash = ? or  (reservTime >= ? AND reservTime < ?) or (? < ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) and ? > ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60))))';
 			sql.select(searchQuery, param).then(function(rows) {
 				resolve(rows);
 			}).catch(function(error) {
@@ -224,23 +224,60 @@ module.exports = {
 
 	settingGET: function(storeUUID) {
 		return new Promise(function(resolve, reject) {
-			var selectQuery = "SELECT * FROM StoreLeftJoinAlarmTalk WHERE storeUUID = ?";
+			var selectQuery = "SELECT * FROM StoreLJoinAlarm WHERE storeUUID = ?";
 
 			sql.select(selectQuery, [storeUUID]).then(function(rows) {
-				resolve(rows[0]);
+				// 질의문에 + 0 하는 이유는 1, 10, 11, 12 ..., 2, 3, 4 하는걸 방지하기 위함
+				return Promise.all([sql.select('SELECT targetName, targetNumber, targetMemo FROM acha.Targets WHERE storeUUID = UNHEX(?) ORDER BY targetName  + 0', [storeUUID]), rows[0]]);
+			}).then(function(result) {
+				result[1].targets = result[0];
+
+				resolve(result[1]);
 			}).catch(function(error) {
 				reject(error);
 			});
 		});
 	},
 
-	settingPOST: function(_alarmTalkInterval, _tables, _defaultReservTimeSpanMin, _storeUUID) {
+	settingTarget: function(storeUUID, targets) {
 		return new Promise(function(resolve, reject) {
-			// 테이블 이름이 [창가1, 창가2] 로 들어오면 창가1, 창가2로 맞춰줌
-			// 알림톡 주기도 마찬가지
-			var updateQuery = "UPDATE Store SET alarmTalkInterval = COALESCE(REPLACE(REPLACE(?, '[', ''), ']', ''), alarmTalkInterval), targets = COALESCE(REPLACE(REPLACE(?, '[', ''), ']', ''), targets), defaultReservTimeSpanMin = COALESCE(?, defaultReservTimeSpanMin) WHERE storeUUID = UNHEX(?)";
+			// 기존 테이블 제거 후 덮어쒸우기
+			var deleteTargets = 'DELETE FROM Targets WHERE storeUUID = UNHEX(?)';
+			sql.delete(deleteTargets, [storeUUID]).then(function() {
+				var promiseArr = [];
 
-			sql.update(updateQuery, [_alarmTalkInterval, _tables, _defaultReservTimeSpanMin, _storeUUID]).then(function(rows) {
+				for(var i = 0; i < targets.length; i++)
+				{
+					var target = targets[i];
+					var insertTargets = 'INSERT INTO Targets (storeUUID, targetName, targetNumber, targetMemo) VALUES(UNHEX(?), ?, ?, ?)';
+					promiseArr.push(sql.insert(insertTargets, [storeUUID, target.name, target.number, target.memo]));
+				}
+
+				return Promise.all(promiseArr);
+			}).then(function(result) {
+				resolve(true);
+			}).catch(function(error) {
+				reject(error);
+			});
+		});
+	},
+
+	settingAlarm: function(storeUUID, firstAlarm, secondAlarm) {
+		return new Promise(function(resolve, reject) {
+			var updateQuery = 'INSERT INTO AlarmTalkInterval (storeUUID, firstAlarm, secondAlarm) VALUES (UNHEX(?), ?, ?) ON DUPLICATE KEY UPDATE firstAlarm = ?, secondAlarm = ?';
+
+			sql.update(updateQuery, [storeUUID, firstAlarm, secondAlarm, firstAlarm, secondAlarm]).then(function(result) {
+				resolve(true);
+			}).catch(function(error) {
+				reject(error);
+			});
+		});
+	},
+
+	settingReservTime: function(storeUUID, reservTime) {
+		return new Promise(function(resolve, reject) {
+			var updateQuery = 'UPDATE Store SET defaultReservTimeSpanMin = ? WHERE storeUUID = UNHEX(?)';
+			sql.update(updateQuery, [reservTime, storeUUID]).then(function(result) {
 				resolve(true);
 			}).catch(function(error) {
 				reject(error);
@@ -254,7 +291,6 @@ module.exports = {
 			var selectUserPhoneNumberToUUID = "SELECT totalReservCnt, totalNoshowCnt, storeReservCnt, storeReservedCnt, storeStoreCancelCnt, storeUserCancelCnt, storeVisitCnt, storeNoshowCnt FROM UserLeftJoinStatistics WHERE storeUUID = ? and phoneNumberHash = ?";
 
 			sql.select(selectUserPhoneNumberToUUID, [_storeUUID, _phoneNumberHash]).then(function(rows) {
-				console.log(rows.length);
 				var resultJson = {
 					storeNoshowCnt: 0,
 					storeReservCnt: 0,

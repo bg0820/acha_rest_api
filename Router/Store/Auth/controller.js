@@ -13,6 +13,7 @@ exports.login = function(req, res) {
 		req.body.pw = _pw;
 	}
 
+
 	// 값이 둘다 있어야함
 	if(!_id && !_pw)
 	{

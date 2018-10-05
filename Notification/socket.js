@@ -4,7 +4,7 @@ const mapper = require('../DB/mapperController.js');
 const ObjectId = require('mongodb').ObjectID;
 const storeSocketList = new HashMap(); // storeId, socket[] // conmap
 const storeFindList = new HashMap(); // socket, storeId // revConMap
-const _io;
+let _io;
 
 module.exports = {
 	// StoreId TO Socket => StoreId -> Socket[]

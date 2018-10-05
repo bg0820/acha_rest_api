@@ -41,14 +41,14 @@ exports.reservation = function(req, res) {
 		_name = _name.trim(); // 이름 공백제거
 	else
 		_name = "";
-	var _tableName = req.body.tableName;
+	var _reservTarget = req.body.reservTarget;
 	var _memo = req.body.memo;
 	if(!_memo)
 		_memo = "";
 
 	// 값이 모두 있어야함, 매니저와 메모 값은 없어도 됌
 	if(!_token || !_phoneNumber || !_reservNumber ||
-	   !_reservTime || !_tableName || !_reservTimeSpanMin)
+	   !_reservTime || !_reservTarget || !_reservTimeSpanMin)
 	{
 		errorProc.errorProcessing(100, res, req);
 		return;
@@ -76,7 +76,7 @@ exports.reservation = function(req, res) {
 			_reservNumber,
 			new Date(Number(_reservTime)),
 			_reservTimeSpanMin,
-			_tableName,
+			_reservTarget,
 			_memo,
 			reservToken
 		];
@@ -84,6 +84,7 @@ exports.reservation = function(req, res) {
 		// 예약 내용 insert
 		return mapper.store.reserv(insertQuery, reservToken);
 	}).then(function(result) {
+		console.log(result);
 		reservUUID = result.reservUUID;
 
 		var param = {
@@ -98,8 +99,8 @@ exports.reservation = function(req, res) {
 		};
 
 		// 알림톡 서버로 예약 정보 넘겨주면 사용자 카카오톡으로 메시지 전송
-		util.requestPost('http://test.acha.io:5000/reserv/regist', param);
-
+		return util.requestPost('http://test.acha.io:5000/reserv/regist', param);
+	}).then(function(result) {
 		// 예약 상태 업데이트
 		return mapper.common.updateStatistics(reservUUID, 'reservwait', 'Store', null);
 	}).then(function(result) {
@@ -151,7 +152,7 @@ exports.reservationSearch = function(req, res) {
 		_name = _name.trim(); // 이름 공백제거
 
 	mapper.store.tokenCheck(_token).then(function(result) {
-		return mapper.store.reservSearch([_name, _phoneNumberHash, _startDate, _endDate, _startDate, _endDate]);
+		return mapper.store.reservSearch([_storeId, _name, _phoneNumberHash, _startDate, _endDate, _startDate, _endDate]);
 	}).then(function(result) {
 		for(var i = 0 ; i < result.length; i++)
 			result[i].reservTarget = util.stringToArray(result[i].reservTarget);
@@ -202,13 +203,13 @@ exports.reservationEdit = function(req, res) {
 	if(_token)
 		_storeId = _token.split('-')[0];
 	var _reservId = req.body.reservId;
-	var _phoneNumber = req.body.phoneNumber;
+	/*var _phoneNumber = req.body.phoneNumber;
 	var _phoneNumberHash;
 	if(_phoneNumber)
 	{
 		_phoneNumber = _phoneNumber.replace(/-/gi, '');
 	    _phoneNumberHash = util.saltHash(_phoneNumber);
-	}
+	}*/
 
 	// 값이 모두 있어야함, 이름은 없어도 가능
 	if( !req.body.token || !req.body.reservId )
@@ -222,7 +223,7 @@ exports.reservationEdit = function(req, res) {
 			req.body.reservNumber,
 			new Date(Number(req.body.reservTime)),
 			req.body.reservName,
-			req.body.tableName,
+			req.body.reservTarget,
 			req.body.memo,
 			_reservId
 		];

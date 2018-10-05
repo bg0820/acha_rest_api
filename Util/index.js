@@ -29,7 +29,7 @@ module.exports = {
 		return saltStr;
 	},
 
-
+	
 	zeroFormating: function(num, len)
 	{
 		if(len == 2)
@@ -38,6 +38,7 @@ module.exports = {
 			return num < 10 ? '000' + num : (num < 100 ? '00' + num : (num < 1000 ? '0' : num));
 	},
 
+	// string -> array
 	stringToArray: function(_string) {
 		if(!_string)
 			return [];

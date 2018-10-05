@@ -66,7 +66,14 @@ module.exports = {
 	{
 		var ip = res.req.headers['x-real-ip'] || res.req.connection.remoteAddress;
 		var dateStr = formDate(new Date());
-		var result =  ip + ' ' + res.req.method + ' ' + res.req.headers.host + res.req.url + ' ' + /* JSON.stringify(res.req.body) +  ' ' + */ res.req.headers['user-agent'];
+
+		var printStr = {};
+		if(res.req.body.pw)
+			printStr = {};
+		else
+			printStr = res.req.body;
+
+		var result =  BgWhite + FgBlack + '[' + res.req.method + ']' + Reset +  ' ' + res.req.headers.host + BgWhite + FgBlack + res.req.url + Reset + ' ' + JSON.stringify(printStr) +  ' ' +  res.req.headers['user-agent'] + ' / ' + ip;
 
 		console.log(Bright + dateStr  + ' INFO ' + Reset + result + Reset);
 		saveLog(dateStr + ' INFO ' + result);

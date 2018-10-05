@@ -18,7 +18,7 @@ module.exports = {
 
 	getNotification: function(storeUUID, date) {
 		return new Promise(function(resolve, reject) {
-			var selectQuery = 'SELECT HEX(storeUUID) as storeUUID, HEX(reservUUID) as reservUUID, caller, changeStatus, msg, date FROM AlertMsg WHERE storeUUID = UNHEX(?) and date > ?';
+			var selectQuery = 'SELECT HEX(storeUUID) as storeUUID, HEX(reservUUID) as reservUUID, caller, changeStatus, msg, date FROM AlertMsg WHERE storeUUID = UNHEX(?) and date > ? and NOT (caller = \"Store\")';
 
 			sql.select(selectQuery, [storeUUID, date]).then(function(rows) {
 				resolve(rows);
