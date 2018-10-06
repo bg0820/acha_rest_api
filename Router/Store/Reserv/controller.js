@@ -84,7 +84,6 @@ exports.reservation = function(req, res) {
 		// 예약 내용 insert
 		return mapper.store.reserv(insertQuery, reservToken);
 	}).then(function(result) {
-		console.log(result);
 		reservUUID = result.reservUUID;
 
 		var param = {
@@ -132,7 +131,7 @@ exports.reservTableExistsCheck = function(req, res) {
 	});
 }
 
-
+/* indexLoad 할때 쓰임 */
 exports.reservationSearch = function(req, res) {
 	var _token = req.query.token;
 	var _storeId;

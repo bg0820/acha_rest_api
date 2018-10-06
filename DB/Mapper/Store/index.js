@@ -149,7 +149,6 @@ module.exports = {
 				var selectQuery = 'SELECT * FROM ReservLeftJoinStore WHERE reservToken = ?';
 				return sql.select(selectQuery, [param[8]]);
 			}).then(function(result) {
-				console.log(result);
 				resolve(result[0]);
 			}).catch(function(error) {
 				reject(error);
@@ -170,13 +169,16 @@ module.exports = {
 
 	reservTableExistsCheck: function(storeUUID, startTime, endTime) {
 		return new Promise(function(resolve, reject) {
-			var isTableCheckQuery = "SELECT reservTarget FROM acha.Reserv WHERE storeUUID = UNHEX(?) and ((reservTime >= ? AND reservTime < ?) or (? < ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) and ? > ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)))) and NOT (reservStatus = 'usercancel' or reservStatus = 'storecancel')";
+			/*console.log(new Date(Number(startTime)));
+			console.log(endTime);*/
+			var isTableCheckQuery = "SELECT reservTarget FROM acha.Reserv WHERE storeUUID = UNHEX(?) and ((reservTime >= ? AND reservTime <= ?) or (? <= ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) and ? >= ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)))) and NOT (reservStatus = 'usercancel' or reservStatus = 'storecancel')";
 
 			sql.select(isTableCheckQuery, [storeUUID, startTime, endTime, startTime, endTime]).then(function(rows) {
 				// 테이블 이름만 가져와서 _reservedTableList 배열에 push 하고 보내줌
 				var _reservedTableList = [];
 				for(var i = 0; i < rows.length; i++)
-					_reservedTableList = util.stringToArray(rows[i].reservTarget)
+						_reservedTableList.push(rows[i].reservTarget)
+
 				resolve(_reservedTableList);
 			}).catch(function(error) {
 				reject(error);
@@ -186,7 +188,7 @@ module.exports = {
 
 	reservSearch: function(param) {
 		return new Promise(function(resolve, reject) {
-			var searchQuery = 'SELECT * FROM acha.ReservLookupTable WHERE storeUUID = UNHEX(?) and (reservName = ? or phoneNumberHash = ? or  (reservTime >= ? AND reservTime < ?) or (? < ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) and ? > ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60))))';
+			var searchQuery = "SELECT * FROM acha.ReservLookupTable WHERE NOT(reservStatus = 'storecancel' or reservStatus = 'usercancel') and storeUUID = ? and (reservName = ? or phoneNumberHash = ? or  (reservTime >= ? AND reservTime < ?) or (? < ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) and ? > ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60))))";
 			sql.select(searchQuery, param).then(function(rows) {
 				resolve(rows);
 			}).catch(function(error) {

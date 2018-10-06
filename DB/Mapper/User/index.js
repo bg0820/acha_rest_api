@@ -5,7 +5,7 @@ module.exports = {
 	userRegister: function(phoneNumber, phoneNumberHash, kakaoUserKey) {
 		return new Promise(function(resolve, reject) {
 			// 삽입후 phoneNumberHash 있으면 UPDATE
-			var insertQuery = 'INSERT INTO User (phoneNumberHash, phoneNumber, kakoUserKey) VALUES (COALESCE(?, NULL), COALESCE(?, NULL), COALESCE(?, NULL)) ON DUPLICATE KEY UPDATE SET phoneNumberHash = COALESCE(?, phoneNumberHash), phoneNumber = COALESCE(?, phoneNumber), kakoUserKey = COALESCE(?, kakoUserKey)';
+			var insertQuery = "INSERT INTO User (userUUID, phoneNumberHash, phoneNumber, kakaoUserKey) VALUES (UNHEX(REPLACE(UUID(),'-',\"\")), COALESCE(?, phoneNumberHash), COALESCE(?, phoneNumber), COALESCE(?, kakaoUserKey)) ON DUPLICATE KEY UPDATE phoneNumberHash = COALESCE(?, phoneNumberHash), phoneNumber = COALESCE(?, phoneNumber), kakaoUserKey = COALESCE(?, kakaoUserKey)";
 
 			sql.insert(insertQuery, [phoneNumberHash, phoneNumber, kakaoUserKey, phoneNumberHash, phoneNumber, kakaoUserKey]).then(function(rows) {
 				resolve(true);

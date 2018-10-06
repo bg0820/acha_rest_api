@@ -93,8 +93,9 @@ module.exports = {
 					totalUpdateQueryStr = "totalVisitCnt = totalVisitCnt + 1";
 					storeUpdateQueryStr = "storeVisitCnt = storeVisitCnt + 1";
 				}
-
+				
 				var reservTargetArr = util.stringToArray(row.reservTarget);
+
 				var param = {
 					storeId: row.storeUUID, // 전송해야할 매장
 					type: _type, // 메시지 타입
