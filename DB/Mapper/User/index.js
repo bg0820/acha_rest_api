@@ -37,10 +37,11 @@ module.exports = {
 			var selectQuery = 'SELECT FcmKey.* FROM acha.FcmKey LEFT JOIN acha.Reserv ON Reserv.storeUUID = FcmKey.storeUUID WHERE Reserv.reservUUID = UNHEX(?)';
 
 			sql.insert(selectQuery, [reservUUID]).then(function(rows) {
+
 				var returnArr = [];
 
-				for(var i = 0; i< row.length; i++)
-					returnArr.push(row[i].fcmKey);
+				for(var i = 0; i< rows.length; i++)
+					returnArr.push(rows[i].fcmKey);
 
 				resolve(returnArr);
 			}).catch(function(error) {

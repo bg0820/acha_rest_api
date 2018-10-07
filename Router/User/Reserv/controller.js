@@ -69,7 +69,7 @@ exports.getReservStatus = function(req, res) {
 
 	// reservToken 또는 reservUUID 를 통해서 예약 상태를 가져옴
 	mapper.user.getReservStatus(_reservId, _reservToken).then(function(result) {
-		res.send({ result : 'success', code: '0', msg: '', statusCode: result.reservStatus,  reservId: result.UUID});
+		res.send({ result : 'success', code: '0', msg: '', statusCode: result.reservStatus,  reservId: result.reservUUID, reservToken: result.reservToken});
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});

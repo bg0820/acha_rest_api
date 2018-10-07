@@ -169,10 +169,7 @@ module.exports = {
 
 	reservTableExistsCheck: function(storeUUID, startTime, endTime) {
 		return new Promise(function(resolve, reject) {
-			/*console.log(new Date(Number(startTime)));
-			console.log(endTime);*/
-			var isTableCheckQuery = "SELECT reservTarget FROM acha.Reserv WHERE storeUUID = UNHEX(?) and ((reservTime >= ? AND reservTime <= ?) or (? <= ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) and ? >= ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)))) and NOT (reservStatus = 'usercancel' or reservStatus = 'storecancel')";
-
+			var isTableCheckQuery = "SELECT reservTarget FROM acha.Reserv WHERE storeUUID = UNHEX(?) and ((reservTime >= ? AND reservTime < ?) or (? < ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) and ? >= ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)))) and NOT (reservStatus = 'usercancel' or reservStatus = 'storecancel')";
 			sql.select(isTableCheckQuery, [storeUUID, startTime, endTime, startTime, endTime]).then(function(rows) {
 				// 테이블 이름만 가져와서 _reservedTableList 배열에 push 하고 보내줌
 				var _reservedTableList = [];
