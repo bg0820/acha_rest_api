@@ -17,10 +17,7 @@ exports.fcmGET = function(req, res) {
 		return;
 	}
 
-	mapper.tokenCheck(_token).then(function(result) {
-		if(result) // 에러코드 존재
-			throw result;
-
+	mapper.store.tokenCheck(_token).then(function(result) {
 		return mapper.store.fcmGET(_storeId);
 	}).then(function(result) {
 		res.send({ result : 'success', code: '0', msg: 'fcmKeyList 가져오기 완료', fcmList: result.fcmKeyList });
@@ -43,10 +40,7 @@ exports.fcmPOST = function(req, res) {
 		return;
 	}
 
-	mapper.tokenCheck(_token).then(function(result) {
-		if(result) // 에러코드 존재
-			throw result;
-
+	mapper.store.tokenCheck(_token).then(function(result) {
 		return mapper.store.fcmPOST(_storeId, _fcmKey);
 	}).then(function(result) {
 		res.send({ result : 'success', code: '0', msg: 'fcmKeyList 가져오기 완료', response: { fcmKeyList: result.fcmKeyList } });

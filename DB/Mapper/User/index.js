@@ -36,7 +36,7 @@ module.exports = {
 			// 삽입후 phoneNumberHash 있으면 UPDATE
 			var selectQuery = 'SELECT FcmKey.* FROM acha.FcmKey LEFT JOIN acha.Reserv ON Reserv.storeUUID = FcmKey.storeUUID WHERE Reserv.reservUUID = UNHEX(?)';
 
-			sql.insert(selectQuery, [reservUUID]).then(function(rows) {
+			sql.select(selectQuery, [reservUUID]).then(function(rows) {
 				var returnArr = [];
 
 				for(var i = 0; i< rows.length; i++)
@@ -52,7 +52,7 @@ module.exports = {
 	reservSearch: function(param) {
 		return new Promise(function(resolve, reject) {
 			// reserved 조회한 시간 - 1시간 이후 예약만
-			var selectQuery = 'SELECT * FROM acha.ReservLookupLeftJoinStore WHERE (kakaoUserKey = ? or phoneNumberHash = ?) and reservStatus = ? and reservTime >= ?';
+			var selectQuery = "SELECT * FROM acha.ReservLookupLeftJoinStore WHERE (kakaoUserKey = ? or phoneNumberHash = ?) and reservStatus = 'reserved' and reservTime >= ?";
 
 			sql.select(selectQuery, param).then(function(rows) {
 				resolve(rows);

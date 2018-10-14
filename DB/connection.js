@@ -11,6 +11,7 @@ module.exports = {
 			user: dbConfig.user,
 			password: dbConfig.password,
 			database: dbConfig.database,
+			timezone: dbConfig.timezone,
 			waitForConnections: dbConfig.waitForConnections,
 			connectionLimit: dbConfig.connectionLimit
 		});

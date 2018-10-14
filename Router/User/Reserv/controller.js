@@ -26,8 +26,9 @@ exports.reservationSearch = function(req, res) {
 		errorProc.errorProcessing(100, res, req);
 		return;
 	}
+	var currentTimestamp = Number(new Date());
 
-	mapper.user.reservSearch([_kakaoUserKey, _phoneNumberHash, 'reserved', new Date(currentTimestamp - 3600000)]).then(function(result) {
+	mapper.user.reservSearch([_kakaoUserKey, _phoneNumberHash, new Date(currentTimestamp - 3600000)]).then(function(result) {
 		res.send({ result : 'success', code: '0', msg: '', reservList: result});
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);

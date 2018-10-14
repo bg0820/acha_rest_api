@@ -49,7 +49,7 @@ function showMap() {
 		});
 		// 마크 클릭시 인포윈도우 오픈
 		var infowindow = new naver.maps.InfoWindow({
-			content: '<div class=\"info\"><h4>' + _storeName + '</h4><div class=\"addr\">'+ myaddress + '</br>' + _detailAddress + '</div><img class=\"storeImg\" src=\"http://test.acha.io:3000/static/img/store.jpg\"></div>'
+			content: '<div class=\"info\"><h4>' + _storeName + '</h4><div class=\"addr\">'+ myaddress + '</br>' + _detailAddress + '</div><img class=\"storeImg\" src=\"http://acha.io:3000/static/img/store.jpg\"></div>'
 		});
 	});
 }

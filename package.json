@@ -1,6 +1,6 @@
 {
-  "name": "ahcha_rest_api",
-  "version": "1.0.0",
+  "name": "acha_rest_api",
+  "version": "2.0.0",
   "description": "acha_rest_api",
   "main": "server.js",
   "scripts": {

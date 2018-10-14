@@ -15,6 +15,7 @@ var engine = require('consolidate');
 // Socket.io
 var io = require('socket.io')(http);
 var socketIo = require('./Notification/socket.js');
+var jConfig = require('./serverConfig.json');
 
 // CORS 설정 cross 문제 해결 ajax
 app.use(cors());
@@ -33,13 +34,15 @@ app.use(function(req, res, next) {
 	next();
 });
 
+log.info('Server Virsion : ' + jConfig.version);
+
 // DB 연결
 database.init();
 // Socket IO Start
 socketIo.start(io);
 
-http.listen(3000, function(){
-  log.info('listening on http://test.acha.io:3000');
+http.listen(jConfig.port, function(){
+  log.info('listening on http://' + jConfig.host + ':' + jConfig.port);
 });
 
 app.use('/store', require('./Router/Store/index'));

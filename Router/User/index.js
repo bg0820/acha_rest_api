@@ -14,8 +14,6 @@ router.get('/reserv/edit', reservController.reservationStatusEdit);
 router.get('/reserv/getstatus', reservController.getReservStatus);
 router.get('/reserv/setname', reservController.userSetName);
 
-//router.get('/reserv/currentStatus', reservController.reservIdToCurrentStatus);
-
 // 미리주문하기
 router.get('/reserv/preorder', reservController.preOrder);
 

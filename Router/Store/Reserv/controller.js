@@ -2,6 +2,7 @@ const util = require('../../../Util');
 const log = require('../../../Util/Log');
 const errorProc = require('../../../Util/Error');
 const mapper = require('../../../DB/mapperController.js');
+const jConfig = require('../../../serverConfig.json');
 let count = 0;
 
 function generateReservToken()
@@ -41,19 +42,20 @@ exports.reservation = function(req, res) {
 		_name = _name.trim(); // 이름 공백제거
 	else
 		_name = "";
-	var _reservTarget = req.body.reservTarget;
+	var _reservTarget = util.arrayToString(req.body.reservTarget);
 	var _memo = req.body.memo;
 	if(!_memo)
 		_memo = "";
 
 	// 값이 모두 있어야함, 매니저와 메모 값은 없어도 됌
 	if(!_token || !_phoneNumber || !_reservNumber ||
-	   !_reservTime || !_reservTarget || !_reservTimeSpanMin)
+	   !_reservTime || (_reservTarget.length == 0)  || !_reservTimeSpanMin)
 	{
 		errorProc.errorProcessing(100, res, req);
 		return;
 	}
 
+	// TODO :: reservTimeSpanMin 이 들어왔을때 테이블이 잡혀있는지 확인해야함
 	// 현재시간보다 1시간 전의경우
 	if(_reservTime < new Date(Number(new Date - 3600000)))
 	{
@@ -98,7 +100,7 @@ exports.reservation = function(req, res) {
 		};
 
 		// 알림톡 서버로 예약 정보 넘겨주면 사용자 카카오톡으로 메시지 전송
-		return util.requestPost('http://test.acha.io:5000/reserv/regist', param);
+		return util.requestPost('http://' + jConfig.host + ':' + jConfig.alarmTalkPort + '/reserv/regist', param);
 	}).then(function(result) {
 		// 예약 상태 업데이트
 		return mapper.common.updateStatistics(reservUUID, 'reservwait', 'Store', null);
@@ -222,7 +224,8 @@ exports.reservationEdit = function(req, res) {
 			req.body.reservNumber,
 			new Date(Number(req.body.reservTime)),
 			req.body.reservName,
-			req.body.reservTarget,
+			util.arrayToString(req.body.reservTarget),
+			req.body.reservTimeSpanMin,
 			req.body.memo,
 			_reservId
 		];
@@ -233,57 +236,6 @@ exports.reservationEdit = function(req, res) {
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});
-};
-
-exports.reservationDateSearch = function(req, res) {
-	var _token = req.query.token;
-	var _storeId;
-	if(_token)
-		_storeId = _token.split('-')[0];
-	var _date = req.query.date;
-
-	// 값이 모두 있어야함
-	if(!_token || !_date)
-	{
-		errorProc.errorProcessing(100, res, req);
-		return;
-	}
-
-	var queryDate = new Date(Number(_date));
-	var today = new Date(queryDate.getFullYear(), queryDate.getMonth(), queryDate.getDate());
-	var todayTimestamp = Number(today);
-	var sunDay = new Date(queryDate.getFullYear(), queryDate.getMonth(), queryDate.getDate() - today.getDay());
-	var plus = 6 - today.getDay();
-	var satDay = new Date(queryDate.getFullYear(), queryDate.getMonth(), queryDate.getDate() + plus);
-	var tomorrow = 86400000; // 1000(1초) * 60(1분) * 60(1시간) * 24(24시간)
-
-	mapper.store.tokenCheck(_token).then(function(result) {
-		/*var weekPromise = mongo.countDocuments('Reserv', { $and: [{storeId: ObjectId(_storeId)}, {reservTime: { '$gte': sunDay, '$lte': satDay } }]});
-		var todayPromise = mongo.countDocuments('Reserv', {  $and: [{storeId: ObjectId(_storeId)}, {reservTime: { '$gte': new Date(todayTimestamp), '$lte': new Date(todayTimestamp + tomorrow) }}] });
-		var tomorrowPromise = mongo.countDocuments('Reserv', { $and: [{storeId: ObjectId(_storeId)}, {reservTime: { '$gte': new Date(todayTimestamp + tomorrow), '$lte': new Date(todayTimestamp + tomorrow + tomorrow) } }]});
-
-		return Promise.all([weekPromise, todayPromise, tomorrowPromise]);*/
-	}).then(function(result) {
-		res.send({ result: 'success', code: '0', msg: ''}); //, weekCount: result[0], todayCount: result[1], tomorrowCount: result[2]})
-	}).catch(function(error) {
-		errorProc.errorProcessing(error, res, req);
-	});
-
-/*
-	mongo.tokenCheck(_token).then(function(result) {
-		if(result) // 에러코드 존재
-			throw result;
-
-		var weekPromise = mongo.countDocuments('Reserv', { $and: [{storeId: ObjectId(_storeId)}, {reservTime: { '$gte': sunDay, '$lte': satDay } }]});
-		var todayPromise = mongo.countDocuments('Reserv', {  $and: [{storeId: ObjectId(_storeId)}, {reservTime: { '$gte': new Date(todayTimestamp), '$lte': new Date(todayTimestamp + tomorrow) }}] });
-		var tomorrowPromise = mongo.countDocuments('Reserv', { $and: [{storeId: ObjectId(_storeId)}, {reservTime: { '$gte': new Date(todayTimestamp + tomorrow), '$lte': new Date(todayTimestamp + tomorrow + tomorrow) } }]});
-
-		return Promise.all([weekPromise, todayPromise, tomorrowPromise]);
-	}).then(function(result) {
-		res.send({ result: 'success', code: '0', msg: '', weekCount: result[0], todayCount: result[1], tomorrowCount: result[2]})
-	}).catch(function(error) {
-		errorProc.errorProcessing(error, res, req);
-	});*/
 };
 
 // 예약 내용 조회

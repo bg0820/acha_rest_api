@@ -1,6 +1,7 @@
 const sql = require('../sql.js');
 const log = require('../../Util/Log');
 const util = require('../../Util');
+const jConfig = require('../../serverConfig.json');
 
 module.exports = {
 	/*
@@ -16,11 +17,11 @@ module.exports = {
 		});
 	}, */
 
-	getNotification: function(storeUUID, date) {
+	getNotification: function(storeUUID, _number, _offset) {
 		return new Promise(function(resolve, reject) {
-			var selectQuery = 'SELECT HEX(storeUUID) as storeUUID, HEX(reservUUID) as reservUUID, caller, changeStatus, msg, date FROM AlertMsg WHERE storeUUID = UNHEX(?) and date > ? and NOT (caller = \"Store\")';
+			var selectQuery = 'SELECT * FROM AlertMsgJReservUser WHERE storeUUID = ? and NOT (caller = \"Store\") order by date desc LIMIT ? OFFSET ?';
 
-			sql.select(selectQuery, [storeUUID, date]).then(function(rows) {
+			sql.select(selectQuery, [storeUUID, _number, _offset]).then(function(rows) {
 				resolve(rows);
 			}).catch(function(error) {
 				reject(error);
@@ -73,7 +74,7 @@ module.exports = {
 							reason: _param.reason
 						};
 
-						util.requestPost('http://test.acha.io:5000/store/cancel', parm);
+						util.requestPost('http://' + jConfig.host + ':' + jConfig.alarmTalkPort + '/store/cancel', parm);
 					}
 					totalUpdateQueryStr = "totalStoreCancelCnt = totalStoreCancelCnt + 1";
 					storeUpdateQueryStr = "storeStoreCancelCnt = storeStoreCancelCnt + 1";
@@ -93,7 +94,7 @@ module.exports = {
 					totalUpdateQueryStr = "totalVisitCnt = totalVisitCnt + 1";
 					storeUpdateQueryStr = "storeVisitCnt = storeVisitCnt + 1";
 				}
-				
+
 				var reservTargetArr = util.stringToArray(row.reservTarget);
 
 				var param = {

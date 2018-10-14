@@ -158,7 +158,7 @@ module.exports = {
 
 	reservEdit: function(param) {
 		return new Promise(function(resolve, reject) {
-			var updateQuery = 'UPDATE Reserv SET reservNumber = COALESCE(?, reservNumber), reservTime = COALESCE(?, reservTime), reservName = COALESCE(?, reservName), reservTarget = COALESCE(?, reservTarget), reservMemo = COALESCE(?, reservMemo) WHERE reservUUID = UNHEX(?)';
+			var updateQuery = 'UPDATE Reserv SET reservNumber = COALESCE(?, reservNumber), reservTime = COALESCE(?, reservTime), reservName = COALESCE(?, reservName), reservTarget = COALESCE(?, reservTarget), reservTimeSpanMin = COALESCE(?, reservTimeSpanMin), reservMemo = COALESCE(?, reservMemo) WHERE reservUUID = UNHEX(?)';
 			sql.update(updateQuery, param).then(function(rows) {
 				resolve(rows);
 			}).catch(function(error) {

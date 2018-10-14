@@ -1,0 +1,7 @@
+{
+	"host": "test.acha.io",
+	"port": 3000,
+	"alarmTalkPort": 5000,
+	"type": "develop",
+	"version": "2.0.1"
+}

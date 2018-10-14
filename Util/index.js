@@ -29,13 +29,28 @@ module.exports = {
 		return saltStr;
 	},
 
-	
+
 	zeroFormating: function(num, len)
 	{
 		if(len == 2)
 			return num < 10 ? '0' + num : num;
 		else if(len == 4)
 			return num < 10 ? '000' + num : (num < 100 ? '00' + num : (num < 1000 ? '0' : num));
+	},
+
+	// array -> stringToArray
+	arrayToString: function(_array) {
+		var resultStr = "";
+
+		for(var i = 0; i < _array.length; i++)
+		{
+			if(_array.length - 1 == i)
+				resultStr += _array[i];
+			else
+				resultStr += _array[i] + ',';
+		}
+
+		return resultStr;
 	},
 
 	// string -> array
