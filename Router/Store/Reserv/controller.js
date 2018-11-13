@@ -55,7 +55,7 @@ exports.reservation = function(req, res) {
 		return;
 	}
 
-	// TODO :: reservTimeSpanMin 이 들어왔을때 테이블이 잡혀있는지 확인해야함
+	// TODO: reservTimeSpanMin 이 들어왔을때 테이블이 잡혀있는지 확인해야함
 	// 현재시간보다 1시간 전의경우
 	if(_reservTime < new Date(Number(new Date - 3600000)))
 	{
@@ -69,7 +69,7 @@ exports.reservation = function(req, res) {
 
 	mapper.store.tokenCheck(_token).then(function(result) {
 		// 사용자 생성
-		return mapper.store.reservUserCreate(_phoneNumberHash, _name);
+		return mapper.store.reservUserCreate(_phoneNumber, _phoneNumberHash, _name);
 	}).then(function(userUUID) {
 		var insertQuery = [
 			userUUID,
@@ -141,7 +141,7 @@ exports.reservationSearch = function(req, res) {
 		_storeId = _token.split('-')[0];
 	var _startDate = new Date(Number(req.query.startDate)); // timestamp
 	var _endDate = new Date(Number(req.query.endDate)); // timestamp
-	var _phoneNumber = req.body.phoneNumber;
+	var _phoneNumber = req.query.phoneNumber;
 	var _phoneNumberHash;
 	if(_phoneNumber)
 	{
@@ -151,6 +151,7 @@ exports.reservationSearch = function(req, res) {
 	var _name = req.query.name;
 	if(_name)
 		_name = _name.trim(); // 이름 공백제거
+
 
 	mapper.store.tokenCheck(_token).then(function(result) {
 		return mapper.store.reservSearch([_storeId, _name, _phoneNumberHash, _startDate, _endDate, _startDate, _endDate]);

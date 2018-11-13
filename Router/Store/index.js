@@ -24,7 +24,7 @@ router.post('/reserv', reservController.reservation);
 router.get('/reserv/search', reservController.reservationSearch);
 router.post('/reserv/edit', reservController.reservationEdit);
 router.get('/reserv/edit/status', reservController.reservationStatusEdit);
-router.get('/reserv/dateSearch', reservController.reservationDateSearch);
+//router.get('/reserv/dateSearch', reservController.reservationDateSearch);
 router.get('/reserv/isCheck', reservController.reservTableExistsCheck);
 router.get('/reserv/inquery', reservController.reservInQuery);
 

@@ -101,24 +101,28 @@ module.exports = {
 		});
 	},
 
-	reservUserCreate: function(_phoneNumberHash, _reservName) {
+	reservUserCreate: function(_phoneNumber, _phoneNumberHash, _reservName) {
 		return new Promise(function(resolve, reject) {
 			var isUserQuery = 'SELECT hex(userUUID) userUUID FROM User WHERE phoneNumberHash = ?;'
 
 			// isUser 유저가 존재하면 뱉어내고, 없으면
 			sql.select(isUserQuery, [_phoneNumberHash]).then(function(rows) {
+				//console.log(rows[0].userUUID);
+
+				// TODO: 여기서 새로 가입한유저 오류ㅜ나는부분 해결중이였음
 				if(rows.length != 0) // 유저가 존재
 					resolve(rows[0].userUUID);
 
-				var userCreateQuery = "INSERT INTO User (userUUID, phoneNumberHash, name, firstReservTime) VALUES (UNHEX(REPLACE(UUID(),'-',\"\")), ?, ?, CURRENT_TIMESTAMP)";
-				return sql.insert(userCreateQuery, [_phoneNumberHash, _reservName]);
+
+				var userCreateQuery = "INSERT INTO User (userUUID, phoneNumber, phoneNumberHash, name, firstReservTime) VALUES (UNHEX(REPLACE(UUID(),'-',\"\")), ?, ?, ?, CURRENT_TIMESTAMP)";
+				return sql.insert(userCreateQuery, [_phoneNumber, _phoneNumberHash, _reservName]);
 			}).then(function(rows) {
 
 				// 생성된 UUID 리턴해야함
 				var selectUUIDQuery = "SELECT hex(userUUID) AS userUUID FROM User WHERE phoneNumberHash = ?";
 				return sql.select(selectUUIDQuery, [_phoneNumberHash]);
 			}).then(function(rows) {
-				resolve(rows[0]);
+				resolve(rows[0].userUUID);
 			}).catch(function(error) {
 				reject(error);
 			});
@@ -128,22 +132,10 @@ module.exports = {
 	reserv: function(param, _reservToken) {
 		return new Promise(function(resolve, reject) {
 			// 테이블 이름이 [창가1, 창가2] 로 들어오면 창가1, 창가2로 맞춰줌
-			var isStatisticsExists = "SELECT EXISTS(SELECT 1 FROM acha.Statistics WHERE userUUID = UNHEX(?) and storeUUID = UNHEX(?) LIMIT 1) as count";
-			sql.select(isStatisticsExists, [param[0], param[1]]).then(function(rows) {
-				var insertQuery = "INSERT INTO Statistics (statisticsUUID, userUUID, storeUUID) VALUES(UNHEX(REPLACE(UUID(),'-',\"\")), UNHEX(?), UNHEX(?))";
-				var updateQuery = "UPDATE Statistics SET reservCnt = reservCnt + 1 WHERE userUUID = UNHEX(?) and storeUUID = UNHEX(?)";
+			//var userUpdateQuery = "UPDATE User SET totalReservCnt = totalReservCnt + 1 WHERE userUUID = UNHEX(?)";
+			var insertQuery = "INSERT INTO Reserv (reservUUID, userUUID, storeUUID, reservName, reservNumber, reservTime, reservTimeSpanMin, reservTarget, reservMemo, reservToken, insertTime) VALUES (UNHEX(REPLACE(UUID(),'-',\"\")), UNHEX(?), UNHEX(?), ?, ?, ?, ?, REPLACE(REPLACE(?, '[', ''), ']', ''), ?, ?, CURRENT_TIMESTAMP)";
 
-				// 없는경우 INSERT
-				if(rows[0].count == 0)
-					sql.insert(insertQuery, [param[0], param[1]]);
-				else // 있는경우 UPDATE
-					sql.update(updateQuery, [param[0], param[1]]);
-			}).then(function() {
-				var userUpdateQuery = "UPDATE User SET totalReservCnt = totalReservCnt + 1 WHERE userUUID = UNHEX(?)";
-				var insertQuery = "INSERT INTO Reserv (reservUUID, userUUID, storeUUID, reservName, reservNumber, reservTime, reservTimeSpanMin, reservTarget, reservMemo, reservToken, insertTime) VALUES (UNHEX(REPLACE(UUID(),'-',\"\")), UNHEX(?), UNHEX(?), ?, ?, ?, ?, REPLACE(REPLACE(?, '[', ''), ']', ''), ?, ?, CURRENT_TIMESTAMP)";
-
-				return Promise.all([sql.update(userUpdateQuery, [param[0]]), sql.insert(insertQuery, param)]);
-			}).then(function() {
+			sql.insert(insertQuery, param).then(function(result) {
 				// 예약 내용 삽입후 예약 토큰으로 UUID 를 가져와서 ReservLeftJoinStore 테이블 가져오기
 				// param[8] = reservToken
 				var selectQuery = 'SELECT * FROM ReservLeftJoinStore WHERE reservToken = ?';
@@ -168,13 +160,19 @@ module.exports = {
 	},
 
 	reservTableExistsCheck: function(storeUUID, startTime, endTime) {
+
 		return new Promise(function(resolve, reject) {
 			var isTableCheckQuery = "SELECT reservTarget FROM acha.Reserv WHERE storeUUID = UNHEX(?) and ((reservTime >= ? AND reservTime < ?) or (? < ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) and ? >= ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)))) and NOT (reservStatus = 'usercancel' or reservStatus = 'storecancel')";
 			sql.select(isTableCheckQuery, [storeUUID, startTime, endTime, startTime, endTime]).then(function(rows) {
 				// 테이블 이름만 가져와서 _reservedTableList 배열에 push 하고 보내줌
 				var _reservedTableList = [];
+
 				for(var i = 0; i < rows.length; i++)
-						_reservedTableList.push(rows[i].reservTarget)
+				{
+					var arr = util.stringToArray(rows[i].reservTarget);
+					for(var j = 0 ; j < arr.length; j++)
+						_reservedTableList.push(arr[j]);
+				}
 
 				resolve(_reservedTableList);
 			}).catch(function(error) {
@@ -185,7 +183,7 @@ module.exports = {
 
 	reservSearch: function(param) {
 		return new Promise(function(resolve, reject) {
-			var searchQuery = "SELECT * FROM acha.ReservLookupTable WHERE NOT(reservStatus = 'storecancel' or reservStatus = 'usercancel') and storeUUID = ? and (reservName = ? or phoneNumberHash = ? or  (reservTime >= ? AND reservTime < ?) or (? < ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) and ? > ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60))))";
+			var searchQuery = "SELECT * FROM acha.ReservLeftJoinUser WHERE storeUUID = ? and (reservName = ? or phoneNumberHash = ? or  (reservTime >= ? AND reservTime < ?) or (? < ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60)) and ? > ADDTIME(reservTime , SEC_TO_TIME(reservTimeSpanMin * 60))))";
 			sql.select(searchQuery, param).then(function(rows) {
 				resolve(rows);
 			}).catch(function(error) {
@@ -208,7 +206,7 @@ module.exports = {
 
 	reservInQuery: function(reservUUID, storeUUID) {
 		return new Promise(function(resolve, reject) {
-			var searchQuery = 'SELECT * FROM ReservLookupTable WHERE reservUUID = ? and storeUUID = ?';
+			var searchQuery = 'SELECT * FROM ReservLeftJoinUser WHERE reservUUID = ? and storeUUID = ?';
 
 			sql.select(searchQuery, [reservUUID, storeUUID]).then(function(rows) {
 				if(rows.length == 0)
@@ -287,24 +285,23 @@ module.exports = {
 	userStatisticsInfo: function(_storeUUID, _phoneNumberHash) {
 		return new Promise(function(resolve, reject) {
 			// 전체는 예약횟수랑, 노쇼만 보여주고 매장은 다보여줌
-			var selectUserPhoneNumberToUUID = "SELECT totalReservCnt, totalNoshowCnt, storeReservCnt, storeReservedCnt, storeStoreCancelCnt, storeUserCancelCnt, storeVisitCnt, storeNoshowCnt FROM UserLeftJoinStatistics WHERE storeUUID = ? and phoneNumberHash = ?";
+			var selectUserPhoneNumberToUUID = "SELECT count(1) as totalReservCnt, count(CASE WHEN reservStatus = 'noshow' THEN 1 END) as totalNoshowCnt, count(CASE WHEN storeUUID = ? THEN 1 END) as storeReservCnt, count(CASE WHEN reservStatus = 'visit' and storeUUID = ? THEN 1 END) as storeVisitCnt, count(CASE WHEN reservStatus = 'usercancel' and storeUUID = ? THEN 1 END) as storeUserCancelCnt, count(CASE WHEN reservStatus = 'noshow' and storeUUID = ? THEN 1 END) as storeNoshowCnt FROM ReservLeftJoinUser WHERE phoneNumberHash = ?";
 
-			sql.select(selectUserPhoneNumberToUUID, [_storeUUID, _phoneNumberHash]).then(function(rows) {
+			sql.select(selectUserPhoneNumberToUUID, [_storeUUID, _storeUUID, _storeUUID, _storeUUID, _phoneNumberHash]).then(function(rows) {
 				var resultJson = {
-					storeNoshowCnt: 0,
-					storeReservCnt: 0,
-					storeReservedCnt: 0,
-					storeStoreCancelCnt: 0,
-					storeUserCancelCnt: 0,
-					storeVisitCnt: 0,
+					totalReservCnt: 0,
 					totalNoshowCnt: 0,
-					totalReservCnt: 0
+					storeReservCnt: 0,
+					storeVisitCnt: 0,
+					storeUserCancelCnt: 0,
+					storeNoshowCnt: 0
 				};
 
 				if(rows.length == 0)
 					resolve(resultJson);
+				else
+					resolve(rows[0]);
 
-				resolve(rows[0]);
 			}).catch(function(error) {
 				reject(error);
 			});

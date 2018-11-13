@@ -5,3 +5,7 @@ const errorProc = require('../../../Util/Error');
 exports.map = function(req, res) {
 	res.render('map.html');
 };
+
+exports.info = function(req, res) {
+
+}

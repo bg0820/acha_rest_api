@@ -39,27 +39,15 @@ module.exports = {
 
 			Promise.all([sql.insert(statusChangeLogQuery, [_reservUUID, _changeStatus]), sql.update(reservStatusChangeQuery, [_changeStatus, _reservUUID])]).then(function(result) {
 				// reservUUID 에 해당하는 storeUUID 를 가지고 FcmKey 조회
-				var selectFcmKey = "SELECT fcmKey FROM Reserv JOIN FcmKey ON Reserv.storeUUID = FcmKey.storeUUID WHERE Reserv.reservUUID = ?";
+				var selectFcmKey = "SELECT fcmKey FROM Reserv JOIN FcmKey ON Reserv.storeUUID = FcmKey.storeUUID WHERE Reserv.reservUUID = UNHEX(?)";
 				var selectReservInfo = "SELECT * FROM ReservJoinStoreUser WHERE reservUUID = ?";
 
-				return Promise.all([sql.select(selectFcmKey, [_reservUUID]), sql.select(selectReservInfo, [_reservUUID]) ]);
+				return Promise.all([sql.select(selectFcmKey, [_reservUUID]), sql.select(selectReservInfo, [_reservUUID]) ] );
 			}).then(function(result) {
 				var fcmKeys = result[0];
 				var row = result[1][0];
-				var totalUpdateQueryStr = '';
-				var storeUpdateQueryStr = '';
 
-				if(_changeStatus == 'reservwait')
-				{
-					totalUpdateQueryStr = "totalReservCnt = totalReservCnt + 1";
-					storeUpdateQueryStr = "storeReservCnt = storeReservCnt + 1";
-				}
-				else if(_changeStatus == 'reserved')
-				{
-					totalUpdateQueryStr = "totalReservedCnt = totalReservCnt + 1";
-					storeUpdateQueryStr = "storeReservedCnt = storeReservCnt + 1";
-				}
-				else if(_changeStatus == 'storecancel')
+				if(_changeStatus == 'storecancel')
 				{
 					if(_type == 'Store' && _param)
 					{
@@ -76,23 +64,6 @@ module.exports = {
 
 						util.requestPost('http://' + jConfig.host + ':' + jConfig.alarmTalkPort + '/store/cancel', parm);
 					}
-					totalUpdateQueryStr = "totalStoreCancelCnt = totalStoreCancelCnt + 1";
-					storeUpdateQueryStr = "storeStoreCancelCnt = storeStoreCancelCnt + 1";
-				}
-				else if(_changeStatus == 'usercancel')
-				{
-					totalUpdateQueryStr = "totalUserCancelCnt = totalUserCancelCnt + 1";
-					storeUpdateQueryStr = "storeUserCancelCnt = storeUserCancelCnt + 1";
-				}
-				else if(_changeStatus == 'noshow')
-				{
-					totalUpdateQueryStr = "totalNoshowCnt = totalNoshowCnt + 1";
-					storeUpdateQueryStr = "storeNoshowCnt = storeNoshowCnt + 1";
-				}
-				else if(_changeStatus == 'visit')
-				{
-					totalUpdateQueryStr = "totalVisitCnt = totalVisitCnt + 1";
-					storeUpdateQueryStr = "storeVisitCnt = storeVisitCnt + 1";
 				}
 
 				var reservTargetArr = util.stringToArray(row.reservTarget);
@@ -116,12 +87,7 @@ module.exports = {
 				noti.pcPushData(row.storeUUID, param);
 
 				// 알림 로그
-				var pr1 = sql.insert('INSERT INTO AlertMsg (storeUUID, reservUUID, caller, changeStatus, msg, date) VALUES(UNHEX(?), UNHEX(?), ?, ?, ?, CURRENT_TIMESTAMP)', [row.storeUUID, _reservUUID, _type, _changeStatus, '']);
-				// 예약 통계 올리기 pr2 = 매장, pr3 = 전체
-				var pr2 = sql.update('UPDATE UserLeftJoinStatistics SET ' + storeUpdateQueryStr + ' WHERE storeUUID = ? and userUUID = ?', [row.storeUUID, row.userUUID]);
-				var pr3 = sql.update('UPDATE UserLeftJoinStatistics SET ' + totalUpdateQueryStr + ' WHERE storeUUID = ? and userUUID = ?', [row.storeUUID, row.userUUID]);
-
-				return Promise.all([pr1, pr2, pr3]);
+				return sql.insert('INSERT INTO AlertMsg (storeUUID, reservUUID, caller, changeStatus, msg, date) VALUES(UNHEX(?), UNHEX(?), ?, ?, ?, CURRENT_TIMESTAMP)', [row.storeUUID, _reservUUID, _type, _changeStatus, '']);
 			}).then(function(result) {
 				resolve(true);
 			}).catch(function(error){

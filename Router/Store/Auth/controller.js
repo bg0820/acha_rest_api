@@ -44,7 +44,7 @@ exports.register = function(req, res) {
 		_phoneNumber = _phoneNumber.replace(/-/gi, '');
 	var _ceoPhoneNumber = req.body.ceoPhoneNumber;
 	if(_ceoPhoneNumber)
-		_ceoPhoneNumber = _phoneNumber.replace(/-/gi, '');
+		_ceoPhoneNumber = _ceoPhoneNumber.replace(/-/gi, '');
 	var _address = req.body.address;
 	var _roadAddress = req.body.roadAddress;
 	var _detailAddress = req.body.detailAddress;
