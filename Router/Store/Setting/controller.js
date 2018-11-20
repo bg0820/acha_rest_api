@@ -3,13 +3,38 @@ const log = require('../../../Util/Log');
 const errorProc = require('../../../Util/Error');
 const mapper = require('../../../DB/mapperController.js');
 
+exports.storeSetting = function(req, res) {
+	var _token = req.body.token;
+	var _storeId;
+	if(_token)
+		_storeId = _token.split('-')[0];
+
+
+},
+
+exports.reservSetting = function(req, res) {
+	var _token = req.body.token;
+	var _storeId;
+	if(_token)
+		_storeId = _token.split('-')[0];
+	var _defaultReservTimeSpan = req.body.defaultReservTimeSpan;
+	var _tableDisplayTime = req.body.tableDisplayTime;
+	var _reservNameReq = req.body.reservNameReq;
+
+	mapper.store.reservSetting(_storeId, _defaultReservTimeSpan, _tableDisplayTime, _reservNameReq).then(function(result) {
+		res.send({ result: 'success', code: '0', msg: '업데이트 완료'});
+	}).catch(function(error) {
+		errorProc.errorProcessing(error, res, req);
+	});
+},
+
 exports.targetSetting = function(req, res) {
 	var _token = req.body.token;
 	var _storeId;
 	if(_token)
 		_storeId = _token.split('-')[0];
 	// 테이블 목록
-	 var _targets = req.body.targets;
+	var _targets = req.body.targets;
 
 	mapper.store.tokenCheck(_token).then(function(result) {
 		return mapper.store.settingTarget(_storeId, _targets);

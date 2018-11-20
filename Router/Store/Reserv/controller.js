@@ -139,9 +139,16 @@ exports.reservationSearch = function(req, res) {
 	var _storeId;
 	if(_token)
 		_storeId = _token.split('-')[0];
+	var _query = req.query.query;
+	if(_query)
+		_query = _query.trim(); // 공백제거
+	var _phoneNumberHash;
+	if(_query)
+	    _phoneNumberHash = util.saltHash(_query.replace(/-/gi, ''));
+
 	var _startDate = new Date(Number(req.query.startDate)); // timestamp
 	var _endDate = new Date(Number(req.query.endDate)); // timestamp
-	var _phoneNumber = req.query.phoneNumber;
+	/*var _phoneNumber = req.query.phoneNumber;
 	var _phoneNumberHash;
 	if(_phoneNumber)
 	{
@@ -151,15 +158,15 @@ exports.reservationSearch = function(req, res) {
 	var _name = req.query.name;
 	if(_name)
 		_name = _name.trim(); // 이름 공백제거
-
+		*/
 
 	mapper.store.tokenCheck(_token).then(function(result) {
-		return mapper.store.reservSearch([_storeId, _name, _phoneNumberHash, _startDate, _endDate, _startDate, _endDate]);
+		return mapper.store.reservSearch([_storeId, _query, _phoneNumberHash, _startDate, _endDate, _startDate, _endDate]);
 	}).then(function(result) {
 		for(var i = 0 ; i < result.length; i++)
 			result[i].reservTarget = util.stringToArray(result[i].reservTarget);
 
-		res.send({ result: 'success', code: '0', msg: '', reservList: result})
+		res.send({ result: 'success', code: '0', msg: '', reservList: result});
 	}).catch(function(error) {
 		errorProc.errorProcessing(error, res, req);
 	});

@@ -221,12 +221,14 @@ module.exports = {
 
 	settingGET: function(storeUUID) {
 		return new Promise(function(resolve, reject) {
-			var selectQuery = "SELECT * FROM StoreLJoinAlarm WHERE storeUUID = ?";
+			var selectQuery = "SELECT * FROM StoreSetting WHERE storeUUID = ?";
 
-			sql.select(selectQuery, [storeUUID]).then(function(rows) {
+			sql.select(selectQuery, [storeUUID]).then(function(result) {
 				// 질의문에 + 0 하는 이유는 1, 10, 11, 12 ..., 2, 3, 4 하는걸 방지하기 위함
-				return Promise.all([sql.select('SELECT targetName, targetNumber, targetMemo FROM acha.Targets WHERE storeUUID = UNHEX(?) ORDER BY targetName  + 0', [storeUUID]), rows[0]]);
+				return Promise.all([sql.select('SELECT targetName, targetNumber, targetMemo FROM acha.Targets WHERE storeUUID = UNHEX(?) ORDER BY 0 + targetName', [storeUUID]), result[0]]);
 			}).then(function(result) {
+				console.log('솔팅', result[0]);
+				console.log('정렬 전', result[1]);
 				result[1].targets = result[0];
 
 				resolve(result[1]);
@@ -238,6 +240,7 @@ module.exports = {
 
 	settingTarget: function(storeUUID, targets) {
 		return new Promise(function(resolve, reject) {
+
 			// 기존 테이블 제거 후 덮어쒸우기
 			var deleteTargets = 'DELETE FROM Targets WHERE storeUUID = UNHEX(?)';
 			sql.delete(deleteTargets, [storeUUID]).then(function() {
@@ -246,8 +249,9 @@ module.exports = {
 				for(var i = 0; i < targets.length; i++)
 				{
 					var target = targets[i];
+
 					var insertTargets = 'INSERT INTO Targets (storeUUID, targetName, targetNumber, targetMemo) VALUES(UNHEX(?), ?, ?, ?)';
-					promiseArr.push(sql.insert(insertTargets, [storeUUID, target.name, target.number, target.memo]));
+					promiseArr.push(sql.insert(insertTargets, [storeUUID, target.targetName, target.targetNumber, target.targetMemo]));
 				}
 
 				return Promise.all(promiseArr);
@@ -281,6 +285,25 @@ module.exports = {
 			});
 		});
 	},
+
+	storeSetting: function(storeUUID)
+	{
+
+	},
+
+	reservSetting: function(storeUUID, defResTimeSpan, tabDisplayTime, resNameReq)
+	{
+		return new Promise(function(resolve, reject) {
+			var updateQuery = 'INSERT INTO Setting (storeUUID, defaultReservTimeSpanMin, tableDisplayTime, reservNameReq) VALUES (UNHEX(?), ?, ?, ?) ON DUPLICATE KEY UPDATE defaultReservTimeSpan = ?, tableDisplayTime = ?, reservNameReq = ?';
+			sql.update(updateQuery, [storeUUID, defResTimeSpan, tabDisplayTime, resNameReq, defResTimeSpan, tabDisplayTime, resNameReq]).then(function(result) {
+				resolve(true);
+			}).catch(function(error) {
+				reject(error);
+			});
+		});
+	},
+
+
 
 	userStatisticsInfo: function(_storeUUID, _phoneNumberHash) {
 		return new Promise(function(resolve, reject) {
