@@ -231,8 +231,7 @@ exports.reservationEdit = function(req, res) {
 		var updateParam = [
 			req.body.reservNumber,
 			new Date(Number(req.body.reservTime)),
-			req.body.reservName,
-			util.arrayToString(req.body.reservTarget),
+			req.body.reservTarget,
 			req.body.reservTimeSpanMin,
 			req.body.memo,
 			_reservId

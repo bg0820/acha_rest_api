@@ -150,7 +150,7 @@ module.exports = {
 
 	reservEdit: function(param) {
 		return new Promise(function(resolve, reject) {
-			var updateQuery = 'UPDATE Reserv SET reservNumber = COALESCE(?, reservNumber), reservTime = COALESCE(?, reservTime), reservName = COALESCE(?, reservName), reservTarget = COALESCE(?, reservTarget), reservTimeSpanMin = COALESCE(?, reservTimeSpanMin), reservMemo = COALESCE(?, reservMemo) WHERE reservUUID = UNHEX(?)';
+			var updateQuery = 'UPDATE Reserv SET reservNumber = COALESCE(?, reservNumber), reservTime = COALESCE(?, reservTime), reservTarget = COALESCE(?, reservTarget), reservTimeSpanMin = COALESCE(?, reservTimeSpanMin), reservMemo = COALESCE(?, reservMemo) WHERE reservUUID = UNHEX(?)';
 			sql.update(updateQuery, param).then(function(rows) {
 				resolve(rows);
 			}).catch(function(error) {
@@ -225,10 +225,10 @@ module.exports = {
 
 			sql.select(selectQuery, [storeUUID]).then(function(result) {
 				// 질의문에 + 0 하는 이유는 1, 10, 11, 12 ..., 2, 3, 4 하는걸 방지하기 위함
-				return Promise.all([sql.select('SELECT targetName, targetNumber, targetMemo FROM acha.Targets WHERE storeUUID = UNHEX(?) ORDER BY 0 + targetName', [storeUUID]), result[0]]);
+				return Promise.all([sql.select('SELECT targetName, targetNumber, targetMemo FROM acha.Targets WHERE storeUUID = UNHEX(?) ORDER BY targetName asc', [storeUUID]), result[0]]);
 			}).then(function(result) {
-				console.log('솔팅', result[0]);
-				console.log('정렬 전', result[1]);
+				//console.log('솔팅', result[0]);
+				//console.log('정렬 전', result[1]);
 				result[1].targets = result[0];
 
 				resolve(result[1]);

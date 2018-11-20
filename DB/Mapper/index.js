@@ -78,10 +78,12 @@ module.exports = {
 					reservTime: row.reservTime,
 					reservMemo: row.reservMemo,
 					reservTarget: reservTargetArr,
+					reservTimeSpanMin: row.reservTimeSpanMin,
 					userPhoneNumber: row.userPhoneNumber,
 					msg: '',
 					date: new Date() // 예약 발생 시간
 				};
+				
 				const noti = require('../../Notification');
 				// pc 포스기로 소켓 전송
 				noti.pcPushData(row.storeUUID, param);
